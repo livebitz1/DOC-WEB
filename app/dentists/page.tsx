@@ -149,6 +149,7 @@ export default function DentistsPage() {
                     >
                       {showEmail[dentist.id] ? "Hide Email" : "Contact"}
                     </Button>
+                    {/* Doctor Dashboard link removed as requested */}
                   </div>
                   {showEmail[dentist.id] && (
                     <div className="mt-4 p-3 rounded bg-blue-50 border border-blue-200 flex flex-col sm:flex-row items-center justify-center gap-2 w-full max-w-full overflow-hidden">

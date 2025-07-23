@@ -8,6 +8,7 @@ export default function StoreUserProfile() {
   useEffect(() => {
     if (isSignedIn && user) {
       const storeUser = async () => {
+        console.log('Clerk user imageUrl:', user.imageUrl);
         await fetch('/api/users', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -15,6 +16,7 @@ export default function StoreUserProfile() {
             clerkId: user.id,
             email: user.emailAddresses[0]?.emailAddress,
             fullName: user.fullName || `${user.firstName} ${user.lastName}`,
+            imageUrl: user.imageUrl,
           }),
         });
       };

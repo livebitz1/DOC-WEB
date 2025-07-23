@@ -1,10 +1,28 @@
-import { UserButton } from "@clerk/nextjs"
-import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
-import React from "react"
-import { AuthButton } from "../../components/home/AuthButton"
+import React, { useEffect, useState } from "react";
+import { useUser, UserButton } from "@clerk/nextjs";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { AuthButton } from "@/components/home/AuthButton";
 
 export function Navigation({ menuOpen, setMenuOpen }: { menuOpen: boolean; setMenuOpen: (open: boolean) => void }) {
+  const { user } = useUser();
+  const [isDoctor, setIsDoctor] = useState(false);
+  useEffect(() => {
+    async function checkDoctor() {
+      if (user?.emailAddresses?.[0]?.emailAddress) {
+        try {
+          const res = await fetch("/api/dentists");
+          const dentists = await res.json();
+          const match = dentists.find((d: any) => d.email === user.emailAddresses[0].emailAddress);
+          setIsDoctor(!!match);
+        } catch {}
+      } else {
+        setIsDoctor(false);
+      }
+    }
+    checkDoctor();
+  }, [user]);
+
   return (
     <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -22,6 +40,9 @@ export function Navigation({ menuOpen, setMenuOpen }: { menuOpen: boolean; setMe
               {[{ href: "/dentists", label: "Dentists" },{ href: "/book", label: "Book" },{ href: "#services", label: "Services" },{ href: "#why", label: "Why Us" },{ href: "#testimonials", label: "Testimonials" },{ href: "#team", label: "Team" },{ href: "#contact", label: "Contact" }].map((item) => (
                 <a key={item.href} href={item.href} className="text-gray-600 font-medium text-sm">{item.label}</a>
               ))}
+              {isDoctor && (
+                <a href="/doctor" className="text-blue-700 font-semibold text-sm">Doctor Dashboard</a>
+              )}
             </nav>
             {/* Auth Button with loading state */}
             <AuthButton />
@@ -43,6 +64,9 @@ export function Navigation({ menuOpen, setMenuOpen }: { menuOpen: boolean; setMe
               {[{ href: "/dentists", label: "Dentists" },{ href: "/book", label: "Book" },{ href: "#services", label: "Services" },{ href: "#why", label: "Why Us" },{ href: "#testimonials", label: "Testimonials" },{ href: "#team", label: "Team" },{ href: "#contact", label: "Contact" }].map((item) => (
                 <a key={item.href} href={item.href} className="text-gray-600 font-medium py-2" onClick={() => setMenuOpen(false)}>{item.label}</a>
               ))}
+              {isDoctor && (
+                <a href="/doctor" className="text-blue-700 font-semibold py-2 text-center">Doctor Dashboard</a>
+              )}
               <Separator className="my-2" />
             </div>
           </div>

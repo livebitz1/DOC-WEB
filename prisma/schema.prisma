@@ -10,6 +10,7 @@ model Booking {
   consultationType String
   message         String?
   consent         Boolean
+  status          String   @default("pending")
   createdAt       DateTime @default(now())
 }
 model Dentist {
@@ -42,5 +43,23 @@ model User {
   clerkId   String   @unique
   email     String   @unique
   fullName  String
+  imageUrl  String?
   createdAt DateTime @default(now())
+}
+
+model Chat {
+  id           Int      @id @default(autoincrement())
+  doctorId     Int
+  patientEmail String
+  createdAt    DateTime @default(now())
+  messages     Message[]
+}
+
+model Message {
+  id        Int      @id @default(autoincrement())
+  chatId    Int
+  sender    String   // "doctor" or "patient"
+  content   String
+  createdAt DateTime @default(now())
+  chat      Chat     @relation(fields: [chatId], references: [id])
 }

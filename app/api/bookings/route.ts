@@ -1,8 +1,15 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const doctorEmail = searchParams.get('doctorEmail');
+    let where = {};
+    if (doctorEmail) {
+      where = { doctor: doctorEmail };
+    }
     const bookings = await prisma.booking.findMany({
+      where,
       orderBy: { createdAt: 'desc' }
     });
     return NextResponse.json(bookings);
@@ -35,7 +42,23 @@ export async function POST(request: Request) {
         consultationType: data.consultationType,
         message: data.message || '',
         consent: !!data.consent,
+        status: "pending",
       },
+    });
+    return NextResponse.json(booking);
+  } catch (error) {
+    return NextResponse.json({ error: String(error) }, { status: 500 });
+  }
+}
+
+// PATCH: Mark booking as completed
+export async function PATCH(request: Request) {
+  try {
+    const { id } = await request.json();
+    if (!id) return NextResponse.json({ error: "Booking ID required" }, { status: 400 });
+    const booking = await prisma.booking.update({
+      where: { id },
+      data: { status: "completed" },
     });
     return NextResponse.json(booking);
   } catch (error) {
