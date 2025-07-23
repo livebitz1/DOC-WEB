@@ -2,6 +2,7 @@ import { UserButton } from "@clerk/nextjs"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import React from "react"
+import { AuthButton } from "../../components/home/AuthButton"
 
 export function Navigation({ menuOpen, setMenuOpen }: { menuOpen: boolean; setMenuOpen: (open: boolean) => void }) {
   return (
@@ -18,11 +19,12 @@ export function Navigation({ menuOpen, setMenuOpen }: { menuOpen: boolean; setMe
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
             <nav className="flex items-center gap-6">
-              {[{ href: "/dentists", label: "Dentists" },{ href: "#services", label: "Services" },{ href: "#why", label: "Why Us" },{ href: "#testimonials", label: "Testimonials" },{ href: "#team", label: "Team" },{ href: "#contact", label: "Contact" }].map((item) => (
+              {[{ href: "/dentists", label: "Dentists" },{ href: "/book", label: "Book" },{ href: "#services", label: "Services" },{ href: "#why", label: "Why Us" },{ href: "#testimonials", label: "Testimonials" },{ href: "#team", label: "Team" },{ href: "#contact", label: "Contact" }].map((item) => (
                 <a key={item.href} href={item.href} className="text-gray-600 font-medium text-sm">{item.label}</a>
               ))}
             </nav>
-            <UserButton afterSignOutUrl="/sign-in" />
+            {/* Auth Button with loading state */}
+            <AuthButton />
           </div>
           {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center gap-4">
@@ -38,11 +40,10 @@ export function Navigation({ menuOpen, setMenuOpen }: { menuOpen: boolean; setMe
         {menuOpen && (
           <div className="md:hidden border-t border-gray-200 py-4">
             <div className="flex flex-col gap-3">
-              {[{ href: "/dentists", label: "Dentists" },{ href: "#services", label: "Services" },{ href: "#why", label: "Why Us" },{ href: "#testimonials", label: "Testimonials" },{ href: "#team", label: "Team" },{ href: "#contact", label: "Contact" }].map((item) => (
+              {[{ href: "/dentists", label: "Dentists" },{ href: "/book", label: "Book" },{ href: "#services", label: "Services" },{ href: "#why", label: "Why Us" },{ href: "#testimonials", label: "Testimonials" },{ href: "#team", label: "Team" },{ href: "#contact", label: "Contact" }].map((item) => (
                 <a key={item.href} href={item.href} className="text-gray-600 font-medium py-2" onClick={() => setMenuOpen(false)}>{item.label}</a>
               ))}
               <Separator className="my-2" />
-              <Button className="bg-[#0077B6] text-white">Book Appointment</Button>
             </div>
           </div>
         )}

@@ -1,3 +1,17 @@
+model Booking {
+  id              Int      @id @default(autoincrement())
+  fullName        String
+  email           String
+  phone           String
+  doctor          String
+  service         String
+  preferredDate   DateTime
+  preferredTime   String
+  consultationType String
+  message         String?
+  consent         Boolean
+  createdAt       DateTime @default(now())
+}
 model Dentist {
   id            Int      @id @default(autoincrement())
   name          String

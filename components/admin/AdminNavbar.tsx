@@ -7,6 +7,7 @@ export default function AdminNavbar() {
       <div className="flex gap-6">
         <Link href="/Live701" className="hover:underline">Create Profile</Link>
         <Link href="/Live701/dentists" className="hover:underline">Dentists</Link>
+        <Link href="/Live701/bookings" className="hover:underline">Bookings</Link>
       </div>
     </nav>
   );

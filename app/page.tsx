@@ -23,22 +23,15 @@ export default function Home() {
   const [menuOpen, setMenuOpen] = React.useState(false)
 
   return (
-    <>
-      <SignedIn>
-        <div className="min-h-screen bg-gray-50">
-          <Navigation menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
-          <HeroSection />
-          <ServicesSection />
-          <WhyChooseUsSection />
-          <TestimonialsSection />
-          <TeamSection />
-          <CTASection />
-          <FooterSection />
-        </div>
-      </SignedIn>
-      <SignedOut>
-        <RedirectToSignIn redirectUrl="/sign-in" />
-      </SignedOut>
-    </>
+    <div className="min-h-screen bg-gray-50">
+      <Navigation menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
+      <HeroSection />
+      <ServicesSection />
+      <WhyChooseUsSection />
+      <TestimonialsSection />
+      <TeamSection />
+      <CTASection />
+      <FooterSection />
+    </div>
   )
 }
