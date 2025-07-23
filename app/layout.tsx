@@ -9,6 +9,7 @@ import {
   SignedOut,
   UserButton,
 } from "@clerk/nextjs";
+import ClientLayout from './client-layout';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,7 +36,8 @@ export default function RootLayout({
       <html lang="en">
         <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
           {/* Removed UserButton from layout header to prevent duplicate avatar in top left */}
-          {children}
+          {/* Automatically store Clerk user profile in Neon after authentication */}
+          <ClientLayout>{children}</ClientLayout>
         </body>
       </html>
     </ClerkProvider>
