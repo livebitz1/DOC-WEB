@@ -1,5 +1,5 @@
 import React from "react"
-import { TestimonialsCarousel } from "@/app/page"
+import { TestimonialsCarousel } from "./TestimonialsCarousel"
 
 export function TestimonialsSection() {
   return (
