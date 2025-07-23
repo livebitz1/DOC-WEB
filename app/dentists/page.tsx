@@ -5,73 +5,42 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 
-const dentists = [
-  {
-    name: "Dr. Emily Carter",
-    photo: null,
-    specialization: "Cosmetic & Restorative Dentistry",
-    qualifications: [
-      "DDS, Harvard School of Dental Medicine",
-      "Member, American Academy of Cosmetic Dentistry",
-      "10+ years experience",
-    ],
-    bio: "Expert in cosmetic and restorative dentistry. Passionate about patient care and comfort.",
-  },
-  {
-    name: "Dr. John Smith",
-    photo: null,
-    specialization: "Orthodontist",
-    qualifications: ["DDS, NYU College of Dentistry", "Certified Invisalign Provider", "8+ years experience"],
-    bio: "Specialist in braces and aligners. Dedicated to creating beautiful, healthy smiles.",
-  },
-  {
-    name: "Dr. Priya Patel",
-    photo: null,
-    specialization: "Implant Specialist",
-    qualifications: [
-      "DDS, University of Michigan",
-      "Fellow, International Congress of Oral Implantologists",
-      "12+ years experience",
-    ],
-    bio: "Expert in dental implants and oral surgery. Committed to advanced, gentle care.",
-  },
-  {
-    name: "Dr. Michael Lee",
-    photo: null,
-    specialization: "Pediatric Dentist",
-    qualifications: [
-      "DDS, University of California, San Francisco",
-      "Board Certified Pediatric Dentist",
-      "7+ years experience"
-    ],
-    bio: "Caring for children’s dental health with a gentle approach and fun environment."
-  },
-  {
-    name: "Dr. Sofia Martinez",
-    photo: null,
-    specialization: "Periodontist",
-    qualifications: [
-      "DDS, University of Pennsylvania",
-      "Master of Science in Periodontology",
-      "9+ years experience"
-    ],
-    bio: "Specialist in gum health and advanced periodontal treatments. Dedicated to patient education and comfort."
-  },
-  {
-    name: "Dr. David Kim",
-    photo: null,
-    specialization: "Endodontist",
-    qualifications: [
-      "DDS, Columbia University",
-      "Certified Endodontic Specialist",
-      "11+ years experience"
-    ],
-    bio: "Expert in root canal therapy and pain management. Focused on saving natural teeth with advanced techniques."
-  }
-]
+type Dentist = {
+  id: number;
+  name: string;
+  email: string;
+  specialty?: string;
+  imageUrl?: string;
+  bio?: string;
+  qualifications?: string[];
+};
 
 export default function DentistsPage() {
   const [search, setSearch] = React.useState("");
+  const [dentists, setDentists] = React.useState<Dentist[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+  const [showEmail, setShowEmail] = React.useState<{[id: number]: boolean}>({});
+  const [copiedEmailId, setCopiedEmailId] = React.useState<number | null>(null);
+
+  React.useEffect(() => {
+    fetchDentists();
+  }, []);
+
+  const fetchDentists = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/dentists");
+      if (!res.ok) throw new Error("Failed to fetch dentists");
+      const data = await res.json();
+      setDentists(Array.isArray(data) ? data : []);
+    } catch (err: any) {
+      setError(err.message || "Unknown error");
+    }
+    setLoading(false);
+  };
+
   const filteredDentists = dentists.filter(d => d.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
@@ -102,73 +71,108 @@ export default function DentistsPage() {
           </div>
         </div>
       </div>
-    {/* Dentists Grid */}
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-      {filteredDentists.length === 0 ? (
-        <div className="text-center text-gray-500 text-xl py-20">No dentists found.</div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredDentists.map((dentist, idx) => (
-            <Card key={idx} className="border border-gray-200 bg-white">
-              <CardHeader className="text-center pb-4">
-                {/* Profile Photo Placeholder */}
-                <div className="w-32 h-32 mx-auto mb-6 bg-gradient-to-br from-[#0077B6] to-[#005f8e] rounded-full flex items-center justify-center">
-                  <svg
-                    className="w-16 h-16 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle cx="12" cy="8" r="5" />
-                    <path d="M4 20c0-4 4-7 8-7s8 3 8 7" />
-                  </svg>
-                </div>
+      {/* Dentists Grid */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        {loading ? (
+          <div className="text-center text-gray-500 text-xl py-20">Loading...</div>
+        ) : error ? (
+          <div className="text-center text-red-500 text-xl py-20">{error}</div>
+        ) : filteredDentists.length === 0 ? (
+          <div className="text-center text-gray-500 text-xl py-20">No dentists found.</div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {filteredDentists.map((dentist, idx) => (
+              <Card key={idx} className="border border-gray-200 bg-white">
+                <CardHeader className="text-center pb-4">
+                  {/* Profile Photo or Placeholder */}
+                  {dentist.imageUrl ? (
+                    <img
+                      src={dentist.imageUrl}
+                      alt={dentist.name}
+                      className="w-32 h-32 mx-auto mb-6 rounded-full object-cover border-4 border-[#0077B6] shadow"
+                    />
+                  ) : (
+                    <div className="w-32 h-32 mx-auto mb-6 bg-gradient-to-br from-[#0077B6] to-[#005f8e] rounded-full flex items-center justify-center">
+                      <svg
+                        className="w-16 h-16 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle cx="12" cy="8" r="5" />
+                        <path d="M4 20c0-4 4-7 8-7s8 3 8 7" />
+                      </svg>
+                    </div>
+                  )}
 
-                {/* Name and Specialization */}
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">{dentist.name}</h2>
-                <Badge variant="secondary" className="bg-blue-50 text-[#0077B6] border-blue-200 mb-4">
-                  {dentist.specialization}
-                </Badge>
-              </CardHeader>
+                  {/* Name and Specialization */}
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">{dentist.name}</h2>
+                  <Badge variant="secondary" className="bg-blue-50 text-[#0077B6] border-blue-200 mb-4">
+                    {dentist.specialty}
+                  </Badge>
+                </CardHeader>
 
-              <CardContent className="pt-0">
-                {/* Qualifications */}
-                <div className="mb-6">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wide">Qualifications</h3>
-                  <div className="space-y-2">
-                    {dentist.qualifications.map((qualification, i) => (
-                      <div key={i} className="flex items-start gap-2">
-                        <div className="w-1.5 h-1.5 bg-[#0077B6] rounded-full mt-2 flex-shrink-0"></div>
-                        <span className="text-sm text-gray-600 leading-relaxed">{qualification}</span>
+                <CardContent className="pt-0">
+                  {/* Qualifications */}
+                  {dentist.qualifications && dentist.qualifications.length > 0 && (
+                    <div className="mb-6">
+                      <h3 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wide">Qualifications</h3>
+                      <div className="space-y-2">
+                        {dentist.qualifications.map((qualification, i) => (
+                          <div key={i} className="flex items-start gap-2">
+                            <div className="w-1.5 h-1.5 bg-[#0077B6] rounded-full mt-2 flex-shrink-0"></div>
+                            <span className="text-sm text-gray-600 leading-relaxed">{qualification}</span>
+                          </div>
+                        ))}
                       </div>
-                    ))}
+                    </div>
+                  )}
+
+                  <Separator className="mb-6" />
+
+                  {/* Bio */}
+                  {dentist.bio && (
+                    <div className="mb-6">
+                      <h3 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wide">About</h3>
+                      <p className="text-gray-600 text-sm leading-relaxed">{dentist.bio}</p>
+                    </div>
+                  )}
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-3">
+                    <Button
+                      variant="outline"
+                      className="flex-1 border-[#0077B6] text-[#0077B6] bg-transparent"
+                      size="sm"
+                      onClick={() => setShowEmail(prev => ({ ...prev, [dentist.id]: !prev[dentist.id] }))}
+                    >
+                      {showEmail[dentist.id] ? "Hide Email" : "Contact"}
+                    </Button>
                   </div>
-                </div>
-
-                <Separator className="mb-6" />
-
-                {/* Bio */}
-                <div className="mb-6">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wide">About</h3>
-                  <p className="text-gray-600 text-sm leading-relaxed">{dentist.bio}</p>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex gap-3">
-                  <Button className="flex-1 bg-[#0077B6] text-white" size="sm">
-                    View Profile
-                  </Button>
-                  <Button variant="outline" className="flex-1 border-[#0077B6] text-[#0077B6] bg-transparent" size="sm">
-                    Contact
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-    </div>
+                  {showEmail[dentist.id] && (
+                    <div className="mt-4 p-3 rounded bg-blue-50 border border-blue-200 flex flex-col sm:flex-row items-center justify-center gap-2 w-full max-w-full overflow-hidden">
+                      <span className="font-semibold text-[#0077B6]">Email:</span>
+                      <span className="ml-2 text-gray-700 truncate break-all inline-block align-middle w-5/6 max-w-full" title={dentist.email}>{dentist.email}</span>
+                      <button
+                        className="ml-2 px-2 py-1 bg-[#0077B6] text-white rounded text-xs hover:bg-[#005f8e] transition"
+                        onClick={() => {
+                          navigator.clipboard.writeText(dentist.email);
+                          setCopiedEmailId(dentist.id);
+                          setTimeout(() => setCopiedEmailId(null), 1500);
+                        }}
+                        title="Copy Email"
+                      >
+                        {copiedEmailId === dentist.id ? "Copied!" : "Copy"}
+                      </button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Call to Action Section */}
       <div className="bg-white border-t border-gray-200">
@@ -264,5 +268,5 @@ export default function DentistsPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
