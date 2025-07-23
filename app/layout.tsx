@@ -34,15 +34,7 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-          <header>
-            <SignedOut>
-              <SignInButton />
-              <SignUpButton />
-            </SignedOut>
-            <SignedIn>
-              <UserButton />
-            </SignedIn>
-          </header>
+          {/* Removed UserButton from layout header to prevent duplicate avatar in top left */}
           {children}
         </body>
       </html>

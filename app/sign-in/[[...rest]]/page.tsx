@@ -3,6 +3,7 @@ import { SignIn } from "@clerk/nextjs";
 import Image from "next/image";
 
 export default function SignInPage() {
+  // Removed useUser and useEffect to ensure no server-side Clerk code is called
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0077B6] via-[#caf0f8] to-[#f8fafc] px-4">
       <div className="absolute inset-0 z-0">
@@ -12,14 +13,20 @@ export default function SignInPage() {
       <div className="relative z-10 bg-white/90 rounded-3xl shadow-2xl p-10 w-full max-w-md flex flex-col gap-8 border border-[#E5E7EB] items-center backdrop-blur">
         <h1 className="text-3xl font-extrabold text-[#0077B6] mb-2 tracking-tight">Welcome to BlueWave Dental</h1>
         <p className="text-gray-600 text-center mb-4 text-base">Sign in to access your personalized dental dashboard and book appointments with ease.</p>
-        <SignIn path="/sign-in" routing="path" signUpUrl="/sign-up" appearance={{
-          elements: {
-            formButtonPrimary: "bg-[#0077B6] hover:bg-[#005f8e] text-white font-bold text-lg rounded-lg py-3",
-            card: "shadow-xl border border-[#E5E7EB] rounded-2xl",
-            headerTitle: "text-[#0077B6] font-bold text-2xl",
-            headerSubtitle: "text-gray-500 text-base",
-          },
-        }} />
+        <SignIn 
+          path="/sign-in" 
+          routing="path" 
+          signUpUrl="/sign-up" 
+          forceRedirectUrl="/" 
+          appearance={{
+            elements: {
+              formButtonPrimary: "bg-[#0077B6] hover:bg-[#005f8e] text-white font-bold text-lg rounded-lg py-3",
+              card: "shadow-xl border border-[#E5E7EB] rounded-2xl",
+              headerTitle: "text-[#0077B6] font-bold text-2xl",
+              headerSubtitle: "text-gray-500 text-base",
+            },
+          }} 
+        />
       </div>
     </div>
   );

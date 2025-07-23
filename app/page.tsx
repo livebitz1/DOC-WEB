@@ -1,5 +1,5 @@
 "use client";
-import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/nextjs";
+import { SignedIn, SignedOut, RedirectToSignIn, UserButton } from "@clerk/nextjs";
 import Image from "next/image";
 import React, { useState } from "react";
 // Removed unused AuthWrapper import
@@ -90,15 +90,21 @@ export default function Home() {
                 <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path d="M8 15s1.5-2 4-2 4 2 4 2" /></svg>
                 BlueWave Dental Clinic
               </span>
-              <button className="md:hidden block p-2 rounded-lg hover:bg-[#005f8e] transition" aria-label="Open menu" onClick={() => setMenuOpen(!menuOpen)}>
-                <svg width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-              </button>
-              <div className="space-x-6 hidden md:flex">
-                <a href="#services" className="hover:underline">Services</a>
-                <a href="#why" className="hover:underline">Why Us</a>
-                <a href="#testimonials" className="hover:underline">Testimonials</a>
-                <a href="#team" className="hover:underline">Team</a>
-                <a href="#contact" className="hover:underline">Contact</a>
+              <div className="flex items-center gap-4">
+                <div className="space-x-6 hidden md:flex">
+                  <a href="#services" className="hover:underline">Services</a>
+                  <a href="#why" className="hover:underline">Why Us</a>
+                  <a href="#testimonials" className="hover:underline">Testimonials</a>
+                  <a href="#team" className="hover:underline">Team</a>
+                  <a href="#contact" className="hover:underline">Contact</a>
+                </div>
+                {/* Clerk User Profile Button in Navbar */}
+                <div className="ml-2">
+                  <UserButton afterSignOutUrl="/sign-in" />
+                </div>
+                <button className="md:hidden block p-2 rounded-lg hover:bg-[#005f8e] transition" aria-label="Open menu" onClick={() => setMenuOpen(!menuOpen)}>
+                  <svg width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+                </button>
               </div>
             </div>
             {/* Mobile Menu */}
@@ -302,7 +308,7 @@ export default function Home() {
         </main>
       </SignedIn>
       <SignedOut>
-        {/* Only redirect, do not render anything else for signed out users */}
+        {/* Automatically redirect to sign-in page for unauthenticated users */}
         <RedirectToSignIn redirectUrl="/sign-in" />
       </SignedOut>
     </>
