@@ -10,15 +10,9 @@ export function Navigation({ menuOpen, setMenuOpen }: { menuOpen: boolean; setMe
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-[#0077B6] rounded-lg flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="10" />
-                <path d="M8 15s1.5-2 4-2 4 2 4 2" />
-              </svg>
-            </div>
+            <img src="/logo.jpeg" alt="Santepheap Dental Clinic Logo" className="w-40 h-15 rounded-lg object-contain bg-white border border-gray-200" />
             <div>
-              <span className="font-bold text-lg text-gray-900">BlueWave</span>
-              <span className="text-[#0077B6] text-sm font-medium ml-1">Dental</span>
+              <span className="font-bold text-lg text-gray-900">SANTEHEAP</span>
             </div>
           </div>
           {/* Desktop Navigation */}
