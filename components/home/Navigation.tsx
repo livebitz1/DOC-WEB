@@ -49,7 +49,7 @@ export function Navigation({ menuOpen, setMenuOpen }: { menuOpen: boolean; setMe
           </div>
           {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center gap-4">
-            <UserButton afterSignOutUrl="/sign-in" />
+            <AuthButton />
             <button className="p-2 text-gray-600" aria-label="Open menu" onClick={() => setMenuOpen(!menuOpen)}>
               <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 {menuOpen ? <path d="M18 6L6 18M6 6l12 12" /> : <path d="M4 6h16M4 12h16M4 18h16" />}
