@@ -326,16 +326,16 @@ export default function DoctorDashboard() {
 
   return (
     <main className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-8">
         {/* Profile Customization Card */}
         <Card className="shadow-sm border border-blue-200 mb-8">
           <CardHeader>
             <CardTitle className="text-xl font-bold text-[#0077B6]">Profile Customization</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col md:flex-row gap-8 items-start">
+            <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-start">
               {/* Image Upload */}
-              <div className="flex flex-col items-center gap-3">
+              <div className="flex flex-col items-center gap-3 w-full md:w-auto">
                 <Avatar className="w-24 h-24 border-4 border-blue-200">
                   <AvatarImage src={profileImage || dentist.imageUrl || undefined} alt={dentist.name} />
                   <AvatarFallback className="bg-[#0077B6] text-white font-bold text-2xl">
@@ -348,10 +348,10 @@ export default function DoctorDashboard() {
               {/* Availability Editor */}
               <div className="flex-1 w-full">
                 <h3 className="font-semibold text-gray-900 mb-2">Weekly Availability</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {Object.keys(availability).map((day) => (
                     <div key={day} className="border rounded-lg p-3 bg-gray-50">
-                      <div className="flex items-center gap-2 mb-2">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
                         <Checkbox id={`day-${day}`} checked={availableDays[day]} onCheckedChange={() => handleDayToggle(day)} />
                         <Label htmlFor={`day-${day}`} className="capitalize font-medium text-gray-800">{day}</Label>
                         {!availableDays[day] && <span className="ml-2 text-xs text-red-500">Unavailable</span>}
@@ -359,12 +359,12 @@ export default function DoctorDashboard() {
                       {availableDays[day] && (
                         <div className="space-y-2">
                           {availability[day].map((slot: string, idx: number) => (
-                            <div key={idx} className="flex items-center gap-2">
+                            <div key={idx} className="flex flex-col xs:flex-row items-stretch xs:items-center gap-2">
                               <input
                                 type="text"
                                 value={slot}
                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleSlotChange(day, idx, e.target.value)}
-                                className="w-40 border rounded px-2 py-1"
+                                className="w-full xs:w-40 border rounded px-2 py-1"
                                 placeholder="09:00-12:00"
                               />
                               <Button type="button" size="sm" variant="outline" onClick={() => handleRemoveSlot(day, idx)}>-</Button>
@@ -376,8 +376,8 @@ export default function DoctorDashboard() {
                     </div>
                   ))}
                 </div>
-                <div className="mt-6 flex gap-3 items-center">
-                  <Button onClick={handleSaveProfile} disabled={savingProfile} className="bg-[#0077B6] text-white px-6">
+                <div className="mt-6 flex flex-col sm:flex-row gap-3 items-center">
+                  <Button onClick={handleSaveProfile} disabled={savingProfile} className="bg-[#0077B6] text-white px-6 w-full sm:w-auto">
                     {savingProfile ? "Saving..." : "Save Profile"}
                   </Button>
                   {profileSaved && <span className="text-green-600 font-medium">Profile saved!</span>}
@@ -388,26 +388,26 @@ export default function DoctorDashboard() {
         </Card>
         {/* Doctor Profile Header */}
         <Card className="shadow-sm border border-gray-200 mb-8">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-6">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
               <Avatar className="w-20 h-20 border-4 border-gray-200">
                 <AvatarImage src={dentist.imageUrl || undefined} alt={dentist.name} />
                 <AvatarFallback className="bg-[#0077B6] text-white font-bold text-2xl">
                   {getInitials(dentist.name)}
                 </AvatarFallback>
               </Avatar>
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
-                  <h1 className="text-2xl font-bold text-gray-900">{dentist.name}</h1>
+              <div className="flex-1 w-full">
+                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-2 sm:gap-3 mb-2">
+                  <h1 className="text-2xl font-bold text-gray-900 text-center sm:text-left">{dentist.name}</h1>
                   <Badge variant="secondary" className="bg-blue-50 text-[#0077B6] border-blue-200">
                     Doctor Dashboard
                   </Badge>
                 </div>
-                {dentist.specialty && <p className="text-lg text-[#0077B6] font-medium mb-2">{dentist.specialty}</p>}
-                <p className="text-gray-600 mb-3">{dentist.email}</p>
-                {dentist.bio && <p className="text-gray-700 text-sm leading-relaxed">{dentist.bio}</p>}
+                {dentist.specialty && <p className="text-lg text-[#0077B6] font-medium mb-2 text-center sm:text-left">{dentist.specialty}</p>}
+                <p className="text-gray-600 mb-3 text-center sm:text-left">{dentist.email}</p>
+                {dentist.bio && <p className="text-gray-700 text-sm leading-relaxed text-center sm:text-left">{dentist.bio}</p>}
                 {dentist.qualifications && dentist.qualifications.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-3">
+                  <div className="flex flex-wrap gap-2 mt-3 justify-center sm:justify-start">
                     {dentist.qualifications.map((qualification, i) => (
                       <Badge key={i} variant="outline" className="text-xs border-gray-300 text-gray-600">
                         {qualification}
@@ -423,8 +423,8 @@ export default function DoctorDashboard() {
         {/* Appointments Section */}
         <Card className="shadow-sm border border-gray-200">
           <CardHeader className="pb-6">
-            <div className="flex items-center justify-between">
-              <div>
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-0">
+              <div className="w-full sm:w-auto">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#0077B6] to-[#005f8e] flex items-center justify-center">
                     <svg
@@ -441,7 +441,7 @@ export default function DoctorDashboard() {
                 </div>
                 <p className="text-gray-600">Manage your scheduled patient appointments</p>
               </div>
-              <Badge variant="secondary" className="bg-blue-50 text-[#0077B6] border-blue-200 px-4 py-2">
+              <Badge variant="secondary" className="bg-blue-50 text-[#0077B6] border-blue-200 px-4 py-2 mt-2 sm:mt-0">
                 {bookings.length} {bookings.length === 1 ? "Appointment" : "Appointments"}
               </Badge>
             </div>
@@ -500,19 +500,19 @@ export default function DoctorDashboard() {
                 {bookings.map((booking, index) => (
                   <div key={booking.id}>
                     <Card className="border border-gray-200 hover:shadow-md transition-shadow duration-200">
-                      <CardContent className="p-6">
-                        <div className="flex items-start gap-4">
-                          <Avatar className="w-12 h-12 border-2 border-gray-200">
+                      <CardContent className="p-4 sm:p-6">
+                        <div className="flex flex-col sm:flex-row items-start gap-4">
+                          <Avatar className="w-12 h-12 border-2 border-gray-200 mb-2 sm:mb-0">
                             <AvatarFallback className="bg-gray-100 text-gray-600 font-semibold">
                               {getInitials(booking.fullName)}
                             </AvatarFallback>
                           </Avatar>
 
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1 min-w-0 w-full">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 gap-2">
                               <div>
                                 <h3 className="text-lg font-bold text-gray-900 mb-1">{booking.fullName}</h3>
-                                <div className="flex items-center gap-4 text-sm text-gray-600">
+                                <div className="flex flex-col xs:flex-row xs:items-center gap-2 xs:gap-4 text-sm text-gray-600">
                                   <div className="flex items-center gap-1">
                                     <svg
                                       className="w-4 h-4"
@@ -551,7 +551,7 @@ export default function DoctorDashboard() {
                               </Badge>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
                               <div className="space-y-1">
                                 <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Service</p>
                                 <Badge variant="outline" className="text-xs border-gray-300 text-gray-600">
@@ -589,7 +589,7 @@ export default function DoctorDashboard() {
                               </div>
                             )}
 
-                            <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-3 border-t border-gray-100 gap-2 sm:gap-0">
                               <div className="flex items-center gap-2 text-xs text-gray-500">
                                 <svg
                                   className="w-4 h-4"
@@ -609,7 +609,7 @@ export default function DoctorDashboard() {
                                   minute: "2-digit",
                                 })}
                               </div>
-                              <div className="flex items-center gap-3">
+                              <div className="flex flex-col xs:flex-row xs:items-center gap-2 sm:gap-3 w-full sm:w-auto">
                                 {/* Mark as Treated Checkbox - Professional & Minimalistic */}
                                 {booking.status !== "completed" && (
                                   <div className="flex items-center space-x-2">
@@ -647,7 +647,7 @@ export default function DoctorDashboard() {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  className="border-blue-300 text-blue-700 bg-blue-50 hover:bg-blue-100"
+                                  className="border-blue-300 text-blue-700 bg-blue-50 hover:bg-blue-100 w-full sm:w-auto"
                                   onClick={async () => {
                                     // Create or get chat session
                                     const res = await fetch("/api/chat", {

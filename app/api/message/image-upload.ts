@@ -29,8 +29,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Missing chatId, sender, or file" }, { status: 400 });
   }
 
-  const ext = (file as File).name.split(".").pop();
-  if (!["jpg", "jpeg", "png"].includes(ext)) {
+  const ext = (file as File).name.split(".").pop()?.toLowerCase();
+  if (!ext || !["jpg", "jpeg", "png"].includes(ext)) {
     return NextResponse.json({ error: "Invalid file type" }, { status: 400 });
   }
 

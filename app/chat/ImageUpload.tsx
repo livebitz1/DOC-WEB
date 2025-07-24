@@ -1,7 +1,7 @@
 import React, { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 
-export default function ImageUpload({ chatId, sender, onUpload }: { chatId: number, sender: string, onUpload: (url: string) => void }) {
+export default function ImageUpload({ chatId, sender, onUpload, triggerButton }: { chatId: number, sender: string, onUpload: (url: string) => void, triggerButton?: React.ReactNode }) {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -29,7 +29,7 @@ export default function ImageUpload({ chatId, sender, onUpload }: { chatId: numb
   };
 
   return (
-    <div className="flex items-center gap-2">
+    <>
       <input
         type="file"
         accept="image/jpeg,image/png"
@@ -37,15 +37,29 @@ export default function ImageUpload({ chatId, sender, onUpload }: { chatId: numb
         style={{ display: "none" }}
         onChange={handleFileChange}
       />
-      <Button
-        type="button"
-        variant="outline"
-        onClick={() => fileInputRef.current?.click()}
-        disabled={uploading}
-        className="px-2 py-1 text-xs"
-      >
-        {uploading ? "Uploading..." : "Send Image"}
-      </Button>
-    </div>
+      {triggerButton ? (
+        React.isValidElement(triggerButton)
+          ? React.cloneElement(triggerButton as React.ReactElement<any>, {
+              ...((triggerButton.props || {}) as object),
+              onClick: (e: any) => {
+                const btn = triggerButton as React.ReactElement<any>;
+                if (typeof btn.props?.onClick === 'function') btn.props.onClick(e);
+                fileInputRef.current?.click();
+              },
+              disabled: uploading,
+            })
+          : triggerButton
+      ) : (
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+          className="px-2 py-1 text-xs"
+        >
+          {uploading ? "Uploading..." : "Send Image"}
+        </Button>
+      )}
+    </>
   );
 }
