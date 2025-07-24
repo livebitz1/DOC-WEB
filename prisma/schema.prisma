@@ -21,6 +21,7 @@ model Dentist {
   imageUrl      String?
   bio           String?
   qualifications String[] @default([])
+  availability  Json?    // { mon: ["09:00-12:00", ...], tue: [...], ... }
   createdAt     DateTime @default(now())
 }
 // This is your Prisma schema file,
@@ -59,7 +60,10 @@ model Message {
   id        Int      @id @default(autoincrement())
   chatId    Int
   sender    String   // "doctor" or "patient"
-  content   String
+  content   String?
+  imageUrl  String?  // Optional image URL for image messages
+  imagePublicId String? // Cloudinary public_id for deletion
   createdAt DateTime @default(now())
+  isRead    Boolean  @default(false)
   chat      Chat     @relation(fields: [chatId], references: [id])
 }

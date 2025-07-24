@@ -13,6 +13,9 @@ type Dentist = {
   imageUrl?: string;
   bio?: string;
   qualifications?: string[];
+  availability?: {
+    [key: string]: string[];
+  };
 };
 
 export default function DentistsPage() {
@@ -42,6 +45,26 @@ export default function DentistsPage() {
   };
 
   const filteredDentists = dentists.filter(d => d.name.toLowerCase().includes(search.toLowerCase()));
+
+  // Handle selecting a dentist for booking
+  const handleSelectForBooking = (dentist: Dentist) => {
+    // If user came from /book, restore form state and redirect back
+    const params = new URLSearchParams(window.location.search)
+    const fromBook = params.get("from") === "book"
+    if (fromBook) {
+      // Restore form state if present
+      const formData = sessionStorage.getItem("bookFormData")
+      let url = `/book?doctor=${encodeURIComponent(dentist.name)}`
+      if (formData) {
+        // Optionally, could pass more state, but doctor is enough
+        // Remove the saved state after use
+        sessionStorage.removeItem("bookFormData")
+      }
+      window.location.href = url
+    } else {
+      window.location.href = `/book?doctor=${encodeURIComponent(dentist.name)}`
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -93,16 +116,7 @@ export default function DentistsPage() {
                     />
                   ) : (
                     <div className="w-32 h-32 mx-auto mb-6 bg-gradient-to-br from-[#0077B6] to-[#005f8e] rounded-full flex items-center justify-center">
-                      <svg
-                        className="w-16 h-16 text-white"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle cx="12" cy="8" r="5" />
-                        <path d="M4 20c0-4 4-7 8-7s8 3 8 7" />
-                      </svg>
+                      <span className="text-3xl text-white font-bold">{dentist.name.split(' ').map(n => n[0]).join('')}</span>
                     </div>
                   )}
 
@@ -114,6 +128,30 @@ export default function DentistsPage() {
                 </CardHeader>
 
                 <CardContent className="pt-0">
+                  {/* Availability Section */}
+                  <div className="mb-6">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wide">Availability</h3>
+                    {dentist.availability && Object.keys(dentist.availability).some(day => dentist.availability && dentist.availability[day]?.length > 0) ? (
+                      <div className="space-y-2">
+                        {Object.entries(dentist.availability).map(([day, slots]) => (
+                          slots && slots.length > 0 ? (
+                            <div key={day} className="flex items-start gap-2">
+                              <span className="capitalize w-16 font-medium text-gray-700">{day}:</span>
+                              <div className="flex flex-wrap gap-2">
+                                {slots.map((slot, i) => (
+                                  <span key={i} className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded text-xs border border-blue-200">
+                                    {slot}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          ) : null
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-gray-500 text-sm">No availability set</span>
+                    )}
+                  </div>
                   {/* Qualifications */}
                   {dentist.qualifications && dentist.qualifications.length > 0 && (
                     <div className="mb-6">
@@ -149,7 +187,14 @@ export default function DentistsPage() {
                     >
                       {showEmail[dentist.id] ? "Hide Email" : "Contact"}
                     </Button>
-                    {/* Doctor Dashboard link removed as requested */}
+                    <Button
+                      variant="default"
+                      className="flex-1 bg-[#0077B6] text-white"
+                      size="sm"
+                      onClick={() => handleSelectForBooking(dentist)}
+                    >
+                      Select for Booking
+                    </Button>
                   </div>
                   {showEmail[dentist.id] && (
                     <div className="mt-4 p-3 rounded bg-blue-50 border border-blue-200 flex flex-col sm:flex-row items-center justify-center gap-2 w-full max-w-full overflow-hidden">

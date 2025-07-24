@@ -26,6 +26,9 @@ interface Dentist {
   imageUrl?: string
   bio?: string
   qualifications?: string[]
+  availability?: {
+    [key: string]: string[]
+  }
 }
 
 interface Booking {
@@ -45,11 +48,97 @@ interface Booking {
 }
 
 export default function DoctorDashboard() {
+  // --- Profile Customization State ---
+  const [profileImage, setProfileImage] = useState<string | null>(null)
+  const [availability, setAvailability] = useState<any>({
+    mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: []
+  })
+  const [availableDays, setAvailableDays] = useState<{[key: string]: boolean}>({
+    mon: false, tue: false, wed: false, thu: false, fri: false, sat: false, sun: false
+  })
+  const [savingProfile, setSavingProfile] = useState(false)
+  const [profileSaved, setProfileSaved] = useState(false)
+
+  // When dentist is loaded, update profileImage, availability, availableDays
+  // Move dentist state above so it's available for useEffect
+  const [dentist, setDentist] = useState<Dentist | null>(null)
+
+  useEffect(() => {
+    if (dentist) {
+      setProfileImage(dentist.imageUrl || null)
+      setAvailability(dentist.availability || {
+        mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: []
+      })
+      const days = ["mon","tue","wed","thu","fri","sat","sun"]
+      const avail: any = {}
+      days.forEach(day => { avail[day] = dentist.availability && dentist.availability[day]?.length > 0 })
+      setAvailableDays(avail)
+    }
+  }, [dentist])
+
+  // Handle image upload (base64 preview, real upload API to be added)
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      setProfileImage(reader.result as string)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  // Handle day toggle
+  const handleDayToggle = (day: string) => {
+    setAvailableDays(prev => ({ ...prev, [day]: !prev[day] }))
+    if (!availableDays[day]) setAvailability((prev: any) => ({ ...prev, [day]: prev[day] || ["09:00-12:00"] }))
+    else setAvailability((prev: any) => ({ ...prev, [day]: [] }))
+  }
+
+  // Handle slot add/remove
+  const handleAddSlot = (day: string) => {
+    setAvailability((prev: any) => ({ ...prev, [day]: [...(prev[day] || []), "09:00-12:00"] }))
+  }
+  const handleRemoveSlot = (day: string, idx: number) => {
+    setAvailability((prev: any) => ({ ...prev, [day]: prev[day].filter((_: any, i: number) => i !== idx) }))
+  }
+  const handleSlotChange = (day: string, idx: number, value: string) => {
+    setAvailability((prev: any) => {
+      const arr = [...prev[day]]
+      arr[idx] = value
+      return { ...prev, [day]: arr }
+    })
+  }
+
+  // Save profile customization
+  const handleSaveProfile = async () => {
+    setSavingProfile(true)
+    setProfileSaved(false)
+    // Save image and availability to backend
+    await fetch("/api/dentists/profile", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        imageUrl: profileImage,
+        availability,
+      }),
+    })
+    // Refetch dentist data to ensure UI is in sync with DB
+    if (user?.emailAddresses?.[0]?.emailAddress) {
+      const dentistRes = await fetch("/api/dentists")
+      const dentists: Dentist[] = await dentistRes.json()
+      const matchedDentist = dentists.find((d) => d.email === user.emailAddresses[0].emailAddress)
+      setDentist(matchedDentist || null)
+    }
+    setSavingProfile(false)
+    setProfileSaved(true)
+    setTimeout(() => setProfileSaved(false), 2000)
+  }
+  // --- End Profile Customization State ---
   const { user, isLoaded } = useUser()
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
-  const [dentist, setDentist] = useState<Dentist | null>(null)
+  // (moved above)
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean
     bookingId: number | null
@@ -238,12 +327,71 @@ export default function DoctorDashboard() {
   return (
     <main className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Profile Customization Card */}
+        <Card className="shadow-sm border border-blue-200 mb-8">
+          <CardHeader>
+            <CardTitle className="text-xl font-bold text-[#0077B6]">Profile Customization</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col md:flex-row gap-8 items-start">
+              {/* Image Upload */}
+              <div className="flex flex-col items-center gap-3">
+                <Avatar className="w-24 h-24 border-4 border-blue-200">
+                  <AvatarImage src={profileImage || dentist.imageUrl || undefined} alt={dentist.name} />
+                  <AvatarFallback className="bg-[#0077B6] text-white font-bold text-2xl">
+                    {getInitials(dentist.name)}
+                  </AvatarFallback>
+                </Avatar>
+                <input type="file" accept="image/*" onChange={handleImageChange} className="mt-2" />
+                <span className="text-xs text-gray-500">Change profile image</span>
+              </div>
+              {/* Availability Editor */}
+              <div className="flex-1 w-full">
+                <h3 className="font-semibold text-gray-900 mb-2">Weekly Availability</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {Object.keys(availability).map((day) => (
+                    <div key={day} className="border rounded-lg p-3 bg-gray-50">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Checkbox id={`day-${day}`} checked={availableDays[day]} onCheckedChange={() => handleDayToggle(day)} />
+                        <Label htmlFor={`day-${day}`} className="capitalize font-medium text-gray-800">{day}</Label>
+                        {!availableDays[day] && <span className="ml-2 text-xs text-red-500">Unavailable</span>}
+                      </div>
+                      {availableDays[day] && (
+                        <div className="space-y-2">
+                          {availability[day].map((slot: string, idx: number) => (
+                            <div key={idx} className="flex items-center gap-2">
+                              <input
+                                type="text"
+                                value={slot}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleSlotChange(day, idx, e.target.value)}
+                                className="w-40 border rounded px-2 py-1"
+                                placeholder="09:00-12:00"
+                              />
+                              <Button type="button" size="sm" variant="outline" onClick={() => handleRemoveSlot(day, idx)}>-</Button>
+                            </div>
+                          ))}
+                          <Button type="button" size="sm" variant="secondary" onClick={() => handleAddSlot(day)}>+ Add Slot</Button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-6 flex gap-3 items-center">
+                  <Button onClick={handleSaveProfile} disabled={savingProfile} className="bg-[#0077B6] text-white px-6">
+                    {savingProfile ? "Saving..." : "Save Profile"}
+                  </Button>
+                  {profileSaved && <span className="text-green-600 font-medium">Profile saved!</span>}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
         {/* Doctor Profile Header */}
         <Card className="shadow-sm border border-gray-200 mb-8">
           <CardContent className="p-6">
             <div className="flex items-center gap-6">
               <Avatar className="w-20 h-20 border-4 border-gray-200">
-                <AvatarImage src={dentist.imageUrl || "/placeholder.svg"} alt={dentist.name} />
+                <AvatarImage src={dentist.imageUrl || undefined} alt={dentist.name} />
                 <AvatarFallback className="bg-[#0077B6] text-white font-bold text-2xl">
                   {getInitials(dentist.name)}
                 </AvatarFallback>

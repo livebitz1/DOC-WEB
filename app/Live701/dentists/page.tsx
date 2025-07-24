@@ -175,7 +175,7 @@ export default function DentistListPage() {
                       <CardContent className="p-6">
                         <div className="flex items-start gap-4">
                           <Avatar className="w-16 h-16 border-2 border-gray-200">
-                            <AvatarImage src={dentist.imageUrl || "/placeholder.svg"} alt={dentist.name} />
+                            <AvatarImage src={dentist.imageUrl || undefined} alt={dentist.name} />
                             <AvatarFallback className="bg-[#0077B6] text-white font-semibold text-lg">
                               {getInitials(dentist.name)}
                             </AvatarFallback>

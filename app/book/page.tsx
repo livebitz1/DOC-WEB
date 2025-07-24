@@ -23,6 +23,10 @@ export default function BookPage() {
     consent: false,
   })
 
+  // For redirecting back after doctor selection
+  const [doctorSelected, setDoctorSelected] = React.useState(false)
+
+  // On mount, fetch doctors and check for doctor param in URL
   React.useEffect(() => {
     async function fetchDoctors() {
       try {
@@ -34,6 +38,14 @@ export default function BookPage() {
       } catch {}
     }
     fetchDoctors()
+
+    // Check for ?doctor= param in URL
+    const params = new URLSearchParams(window.location.search)
+    const doctorParam = params.get("doctor")
+    if (doctorParam) {
+      setFormData((prev) => ({ ...prev, doctor: doctorParam }))
+      setDoctorSelected(true)
+    }
   }, [])
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -158,21 +170,35 @@ export default function BookPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label className="text-gray-700 font-medium">Doctor Selection *</Label>
-                  <Select
-                    value={formData.doctor}
-                    onValueChange={(value) => setFormData({ ...formData, doctor: value })}
-                  >
-                    <SelectTrigger className="border-gray-300 focus:border-[#0077B6] focus:ring-[#0077B6]">
-                      <SelectValue placeholder="Select a doctor" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {doctors.map((name) => (
-                        <SelectItem key={name} value={name}>
-                          {name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {formData.doctor ? (
+                    <div className="flex items-center gap-3">
+                      <span className="font-semibold text-[#0077B6] text-base">{formData.doctor}</span>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="border-[#0077B6] text-[#0077B6] bg-transparent px-3 py-1"
+                        onClick={() => {
+                          setFormData((prev) => ({ ...prev, doctor: "" }))
+                          setDoctorSelected(false)
+                        }}
+                      >
+                        Change
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      type="button"
+                      className="bg-[#0077B6] text-white w-full"
+                      onClick={() => {
+                        // Save current form state to sessionStorage for restoration after redirect
+                        sessionStorage.setItem("bookFormData", JSON.stringify(formData))
+                        window.location.href = "/dentists?from=book"
+                      }}
+                    >
+                      Select Doctor
+                    </Button>
+                  )}
                 </div>
 
                 <div className="space-y-2">

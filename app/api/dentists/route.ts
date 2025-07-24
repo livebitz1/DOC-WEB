@@ -14,7 +14,12 @@ if (process.env.NODE_ENV === 'production') {
 export async function GET() {
   try {
     const dentists = await prisma.dentist.findMany({ orderBy: { createdAt: 'desc' } });
-    return NextResponse.json(dentists);
+    // Ensure availability is always returned as an object, not null
+    const dentistsWithAvailability = dentists.map(d => ({
+      ...d,
+      availability: d.availability || { mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] }
+    }));
+    return NextResponse.json(dentistsWithAvailability);
   } catch (error) {
     // no disconnect
     return NextResponse.json({ error: String(error) }, { status: 500 });
@@ -24,7 +29,7 @@ export async function GET() {
 // POST: Add a new dentist profile
 export async function POST(request: Request) {
   try {
-    const { name, email, specialty, imageUrl, bio, qualifications } = await request.json();
+    const { name, email, specialty, imageUrl, bio, qualifications, availability } = await request.json();
     if (!name || !email) {
       return NextResponse.json({ error: 'Name and email are required.' }, { status: 400 });
     }
@@ -36,7 +41,15 @@ export async function POST(request: Request) {
       qualificationsArr = qualifications.split(',').map(q => q.trim()).filter(q => q);
     }
     const dentist = await prisma.dentist.create({
-      data: { name, email, specialty, imageUrl, bio, qualifications: qualificationsArr },
+      data: {
+        name,
+        email,
+        specialty,
+        imageUrl,
+        bio,
+        qualifications: qualificationsArr,
+        availability: availability || { mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] },
+      },
     });
     return NextResponse.json(dentist);
   } catch (error) {
