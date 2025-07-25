@@ -32,25 +32,45 @@ export default function ChatListPage() {
   // Track which chatIds have been joined
   const joinedChatIdsRef = useRef<Set<number>>(new Set());
 
-  // Determine userType and userId
-  let userType = "patient";
-  let userId: string | number | undefined = undefined;
-  if (user) {
-    if (user.publicMetadata?.role === "doctor" && user.publicMetadata?.doctorId) {
-      userType = "doctor";
-      userId = Number(user.publicMetadata.doctorId);
-    } else if (user.primaryEmailAddress?.emailAddress) {
-      userType = "patient";
-      userId = user.primaryEmailAddress.emailAddress;
+  // Robust doctor/patient detection using dentist DB (same as chat page)
+  const [userType, setUserType] = useState<"doctor" | "patient">("patient");
+  const [userId, setUserId] = useState<string | number | undefined>(undefined);
+  const [doctorId, setDoctorId] = useState<number | undefined>(undefined);
+  useEffect(() => {
+    async function detectUserType() {
+      if (!user?.primaryEmailAddress?.emailAddress) return;
+      const email = user.primaryEmailAddress.emailAddress;
+      try {
+        const res = await fetch("/api/dentists");
+        const dentists = await res.json();
+        const match = dentists.find((d: any) => d.email === email);
+        if (match) {
+          setUserType("doctor");
+          setUserId(match.id); // Use dentist id as userId
+          setDoctorId(match.id);
+        } else {
+          setUserType("patient");
+          setUserId(email);
+          setDoctorId(undefined);
+        }
+      } catch {
+        setUserType("patient");
+        setUserId(email);
+        setDoctorId(undefined);
+      }
     }
-  }
+    if (user) detectUserType();
+  }, [user]);
 
   useEffect(() => {
     if (!isLoaded || !userId) return;
     setLoading(true);
-    fetch(`/api/chat/notifications?userType=${userType}&userId=${encodeURIComponent(String(userId))}`)
+    const url = `/api/chat/notifications?userType=${userType}&userId=${encodeURIComponent(String(userId))}`;
+    console.log(`[ChatListPage] Fetching: userType=${userType}, userId=${userId}, url=${url}`);
+    fetch(url)
       .then(res => res.json())
       .then(async data => {
+        console.log('[ChatListPage] Response:', data);
         setChats(data);
         // Fetch profile for each chat
         const entries = await Promise.all(
@@ -176,7 +196,11 @@ export default function ChatListPage() {
               {filtered.map((chat, idx) => {
                 const lastMsg = chat.lastMessage;
                 const isUnread = chat.unreadCount > 0 && lastMsg?.sender !== userType;
-                const profile = profiles[chat.chatId] || { name: "Unknown", imageUrl: "/globe.svg" };
+                let profile = profiles[chat.chatId] || { name: "Unknown", imageUrl: "/globe.svg" };
+                // For patient, always use doctor image from chat if available
+                if (userType === "patient" && chat.doctorImageUrl) {
+                  profile = { ...profile, imageUrl: chat.doctorImageUrl };
+                }
                 return (
                   <li key={chat.chatId}>
                     <button

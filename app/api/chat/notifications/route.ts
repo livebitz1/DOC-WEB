@@ -29,6 +29,24 @@ export async function GET(request: Request) {
         messages: true,
       },
     });
+    // Fetch all patient profiles in one go
+    const patientEmails = Array.from(new Set(chats.map((c: any) => c.patientEmail)));
+    const patients = await prisma.user.findMany({ where: { email: { in: patientEmails } } });
+    const patientMap = Object.fromEntries(patients.map((u: any) => [u.email, u]));
+    const chatNotifications = chats.map(chat => {
+      const unreadCount = chat.messages.filter(m => m.sender !== userType && !m.isRead).length;
+      const patient = patientMap[chat.patientEmail] || {};
+      return {
+        chatId: chat.id,
+        doctorId: chat.doctorId,
+        patientEmail: chat.patientEmail,
+        patientFullName: patient.fullName || chat.patientEmail,
+        patientImageUrl: patient.imageUrl || "",
+        unreadCount,
+        lastMessage: chat.messages[chat.messages.length - 1] || null,
+      };
+    });
+    return NextResponse.json(chatNotifications);
   } else {
     chats = await prisma.chat.findMany({
       where: { patientEmail: userId },
@@ -36,19 +54,23 @@ export async function GET(request: Request) {
         messages: true,
       },
     });
+    // Fetch all doctor profiles in one go
+    const doctorIds = Array.from(new Set(chats.map((c: any) => c.doctorId)));
+    const doctors = await prisma.dentist.findMany({ where: { id: { in: doctorIds } } });
+    const doctorMap = Object.fromEntries(doctors.map((d: any) => [d.id, d]));
+    const chatNotifications = chats.map(chat => {
+      const unreadCount = chat.messages.filter(m => m.sender !== userType && !m.isRead).length;
+      const doctor = doctorMap[chat.doctorId] || {};
+      return {
+        chatId: chat.id,
+        doctorId: chat.doctorId,
+        patientEmail: chat.patientEmail,
+        doctorImageUrl: doctor.imageUrl || "",
+        doctorName: doctor.name || `Dr. ${chat.doctorId}`,
+        unreadCount,
+        lastMessage: chat.messages[chat.messages.length - 1] || null,
+      };
+    });
+    return NextResponse.json(chatNotifications);
   }
-
-  // For each chat, count unread messages for the user
-  const chatNotifications = chats.map(chat => {
-    const unreadCount = chat.messages.filter(m => m.sender !== userType && !m.isRead).length;
-    return {
-      chatId: chat.id,
-      doctorId: chat.doctorId,
-      patientEmail: chat.patientEmail,
-      unreadCount,
-      lastMessage: chat.messages[chat.messages.length - 1] || null,
-    };
-  });
-
-  return NextResponse.json(chatNotifications);
 }
