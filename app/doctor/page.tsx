@@ -26,6 +26,7 @@ interface Dentist {
   imageUrl?: string
   bio?: string
   qualifications?: string[]
+  services?: string[]
   availability?: {
     [key: string]: string[]
   }
@@ -56,6 +57,7 @@ export default function DoctorDashboard() {
   const [availableDays, setAvailableDays] = useState<{[key: string]: boolean}>({
     mon: false, tue: false, wed: false, thu: false, fri: false, sat: false, sun: false
   })
+  const [services, setServices] = useState<string[]>([])
   const [savingProfile, setSavingProfile] = useState(false)
   const [profileSaved, setProfileSaved] = useState(false)
 
@@ -66,13 +68,16 @@ export default function DoctorDashboard() {
   useEffect(() => {
     if (dentist) {
       setProfileImage(dentist.imageUrl || null)
-      setAvailability(dentist.availability || {
-        mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: []
+      setServices(dentist.services || [])
+      // Only keep date-based keys (YYYY-MM-DD)
+      const availObj = dentist.availability || {}
+      const dateBasedAvail: any = {}
+      Object.keys(availObj).forEach(key => {
+        if (/^\d{4}-\d{2}-\d{2}$/.test(key)) {
+          dateBasedAvail[key] = availObj[key]
+        }
       })
-      const days = ["mon","tue","wed","thu","fri","sat","sun"]
-      const avail: any = {}
-      days.forEach(day => { avail[day] = dentist.availability && dentist.availability[day]?.length > 0 })
-      setAvailableDays(avail)
+      setAvailability(dateBasedAvail)
     }
   }, [dentist])
 
@@ -113,13 +118,20 @@ export default function DoctorDashboard() {
   const handleSaveProfile = async () => {
     setSavingProfile(true)
     setProfileSaved(false)
-    // Save image and availability to backend
+    // Only send date-based slots (YYYY-MM-DD keys)
+    const dateBasedAvail: any = {}
+    Object.keys(availability).forEach(key => {
+      if (/^\d{4}-\d{2}-\d{2}$/.test(key)) {
+        dateBasedAvail[key] = availability[key]
+      }
+    })
     await fetch("/api/dentists/profile", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         imageUrl: profileImage,
-        availability,
+        availability: dateBasedAvail,
+        services,
       }),
     })
     // Refetch dentist data to ensure UI is in sync with DB
@@ -323,7 +335,7 @@ export default function DoctorDashboard() {
       </div>
     )
   }
-
+  // Main Doctor Dashboard UI (only if dentist exists)
   return (
     <main className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-8">
@@ -333,10 +345,10 @@ export default function DoctorDashboard() {
             <CardTitle className="text-xl font-bold text-[#0077B6]">Profile Customization</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-start">
-              {/* Image Upload */}
-              <div className="flex flex-col items-center gap-3 w-full md:w-auto">
-                <Avatar className="w-24 h-24 border-4 border-blue-200">
+            <div className="flex flex-col gap-8 w-full xl:flex-row xl:items-stretch xl:gap-12">
+              {/* Profile Management Section */}
+              <div className="flex flex-col items-center xl:items-start gap-6 w-full xl:w-2/5 bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+                <Avatar className="w-24 h-24 border-4 border-blue-200 mx-auto xl:mx-0">
                   <AvatarImage src={profileImage || dentist.imageUrl || undefined} alt={dentist.name} />
                   <AvatarFallback className="bg-[#0077B6] text-white font-bold text-2xl">
                     {getInitials(dentist.name)}
@@ -344,37 +356,190 @@ export default function DoctorDashboard() {
                 </Avatar>
                 <input type="file" accept="image/*" onChange={handleImageChange} className="mt-2" />
                 <span className="text-xs text-gray-500">Change profile image</span>
+                <div className="w-full">
+                  <h3 className="font-semibold text-gray-900 mb-2 text-center xl:text-left">Services Offered</h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-2">
+                    {[
+                      "Cleaning",
+                      "Whitening",
+                      "Braces",
+                      "Implants",
+                      "Root Canal",
+                      "Extraction",
+                      "Crown",
+                      "Veneers",
+                      "Dentures",
+                      "Other",
+                    ].map((service) => (
+                      <label
+                        key={service}
+                        className={`px-3 py-1 rounded border cursor-pointer text-sm flex items-center ${
+                          services.includes(service)
+                            ? "bg-[#0077B6] text-white border-[#0077B6]"
+                            : "bg-white text-gray-700 border-gray-300"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          className="mr-2 accent-[#0077B6]"
+                          checked={services.includes(service)}
+                          onChange={(e) => {
+                            if (e.target.checked) setServices((prev) => [...prev, service])
+                            else setServices((prev) => prev.filter((s) => s !== service))
+                          }}
+                        />
+                        {service}
+                      </label>
+                    ))}
+                  </div>
+                  {services.includes("Other") && (
+                    <input
+                      type="text"
+                      placeholder="Other service..."
+                      className="border rounded px-2 py-1 mt-2 w-full"
+                      value={
+                        services.find(
+                          (s) =>
+                            ![
+                              "Cleaning",
+                              "Whitening",
+                              "Braces",
+                              "Implants",
+                              "Root Canal",
+                              "Extraction",
+                              "Crown",
+                              "Veneers",
+                              "Dentures",
+                              "Other",
+                            ].includes(s)
+                        ) || ""
+                      }
+                      onChange={(e) => {
+                        const val = e.target.value
+                        setServices((prev) => [
+                          ...prev.filter((s) =>
+                            [
+                              "Cleaning",
+                              "Whitening",
+                              "Braces",
+                              "Implants",
+                              "Root Canal",
+                              "Extraction",
+                              "Crown",
+                              "Veneers",
+                              "Dentures",
+                              "Other",
+                            ].includes(s)
+                          ),
+                          ...(val ? [val] : []),
+                        ])
+                      }}
+                    />
+                  )}
+                </div>
+                <Button onClick={handleSaveProfile} disabled={savingProfile} className="bg-[#0077B6] text-white px-6 w-full">
+                  {savingProfile ? "Saving..." : "Save Profile"}
+                </Button>
+                {profileSaved && <span className="text-green-600 font-medium text-center">Profile saved!</span>}
               </div>
-              {/* Availability Editor */}
-              <div className="flex-1 w-full">
-                <h3 className="font-semibold text-gray-900 mb-2">Weekly Availability</h3>
+              {/* Add Slot Section */}
+              <div className="flex-1 w-full xl:w-3/5 bg-white rounded-lg p-4 shadow-sm border border-gray-100 mt-8 xl:mt-0">
+                <h3 className="font-semibold text-gray-900 mb-2">Custom Availability (Date-based)</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {Object.keys(availability).map((day) => (
-                    <div key={day} className="border rounded-lg p-3 bg-gray-50">
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
-                        <Checkbox id={`day-${day}`} checked={availableDays[day]} onCheckedChange={() => handleDayToggle(day)} />
-                        <Label htmlFor={`day-${day}`} className="capitalize font-medium text-gray-800">{day}</Label>
-                        {!availableDays[day] && <span className="ml-2 text-xs text-red-500">Unavailable</span>}
+                  {/* New: Date-based slot creation */}
+                  <div className="border rounded-lg p-3 bg-gray-50">
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault()
+                        const form = e.currentTarget
+                        const date = form.slotDate.value
+                        const startTime = form.slotStartTime.value
+                        const startAMPM = form.slotStartAMPM.value
+                        const endTime = form.slotEndTime.value
+                        const endAMPM = form.slotEndAMPM.value
+                        if (!date || !startTime || !startAMPM || !endTime || !endAMPM) return
+                        const slotString = `${startTime} ${startAMPM.toLowerCase()} - ${endTime} ${endAMPM.toLowerCase()}`
+                        setAvailability((prev: any) => {
+                          const newAvail = { ...prev }
+                          if (!newAvail[date]) newAvail[date] = []
+                          newAvail[date].push(slotString)
+                          return newAvail
+                        })
+                        form.reset()
+                      }}
+                      className="flex flex-col gap-2"
+                    >
+                      <label className="text-sm font-medium text-gray-700">Date</label>
+                      <input type="date" name="slotDate" className="border rounded px-2 py-1" required />
+                      <label className="text-sm font-medium text-gray-700">Start Time</label>
+                      <div className="flex gap-2 mb-2">
+                        <input type="time" name="slotStartTime" className="border rounded px-2 py-1 flex-1" required />
+                        <select name="slotStartAMPM" className="border rounded px-2 py-1" required>
+                          <option value="am">AM</option>
+                          <option value="pm">PM</option>
+                        </select>
                       </div>
-                      {availableDays[day] && (
-                        <div className="space-y-2">
-                          {availability[day].map((slot: string, idx: number) => (
-                            <div key={idx} className="flex flex-col xs:flex-row items-stretch xs:items-center gap-2">
-                              <input
-                                type="text"
-                                value={slot}
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleSlotChange(day, idx, e.target.value)}
-                                className="w-full xs:w-40 border rounded px-2 py-1"
-                                placeholder="09:00-12:00"
-                              />
-                              <Button type="button" size="sm" variant="outline" onClick={() => handleRemoveSlot(day, idx)}>-</Button>
+                      <label className="text-sm font-medium text-gray-700">End Time</label>
+                      <div className="flex gap-2">
+                        <input type="time" name="slotEndTime" className="border rounded px-2 py-1 flex-1" required />
+                        <select name="slotEndAMPM" className="border rounded px-2 py-1" required>
+                          <option value="am">AM</option>
+                          <option value="pm">PM</option>
+                        </select>
+                      </div>
+                      <Button
+                        type="submit"
+                        size="sm"
+                        variant="secondary"
+                        className="mt-2 flex items-center justify-center gap-2 bg-[#0077B6] hover:bg-[#005f8e] text-white font-semibold px-4 py-2 rounded transition-colors duration-200 focus:ring-2 focus:ring-[#0077B6] focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+                        disabled={savingProfile}
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                          <path d="M12 4v16m8-8H4" />
+                        </svg>
+                        {savingProfile ? "Adding..." : "Add Slot"}
+                      </Button>
+                    </form>
+                  </div>
+                  {/* List all date-based slots */}
+                  <div className="border rounded-lg p-3 bg-gray-50">
+                    <h4 className="font-semibold text-gray-800 mb-2">All Slots</h4>
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {Object.entries(availability).length === 0 && <span className="text-gray-500 text-sm">No slots set</span>}
+                      {Object.entries(availability)
+                        .sort(([a], [b]) => a.localeCompare(b))
+                        .map(([date, slots]) => {
+                          const slotArr = Array.isArray(slots) ? (slots as string[]) : []
+                          return (
+                            <div key={date} className="mb-2">
+                              <span className="font-medium text-blue-700 text-sm">{new Date(date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}:</span>
+                              <div className="flex flex-wrap gap-2 mt-1">
+                                {slotArr.map((slot, idx) => (
+                                  <span key={idx} className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded text-xs border border-blue-200 flex items-center gap-1">
+                                    {slot}
+                                    <button
+                                      type="button"
+                                      className="ml-1 text-red-500 hover:text-red-700"
+                                      onClick={() =>
+                                        setAvailability((prev: any) => {
+                                          const arr = [...prev[date]]
+                                          arr.splice(idx, 1)
+                                          const newAvail = { ...prev, [date]: arr }
+                                          if (newAvail[date].length === 0) delete newAvail[date]
+                                          return newAvail
+                                        })
+                                      }
+                                    >
+                                      &times;
+                                    </button>
+                                  </span>
+                                ))}
+                              </div>
                             </div>
-                          ))}
-                          <Button type="button" size="sm" variant="secondary" onClick={() => handleAddSlot(day)}>+ Add Slot</Button>
-                        </div>
-                      )}
+                          )
+                        })}
                     </div>
-                  ))}
+                  </div>
                 </div>
                 <div className="mt-6 flex flex-col sm:flex-row gap-3 items-center">
                   <Button onClick={handleSaveProfile} disabled={savingProfile} className="bg-[#0077B6] text-white px-6 w-full sm:w-auto">
@@ -415,11 +580,20 @@ export default function DoctorDashboard() {
                     ))}
                   </div>
                 )}
+                {/* Services Section */}
+                {dentist.services && dentist.services.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-3 justify-center sm:justify-start">
+                    {dentist.services.map((service: string, i: number) => (
+                      <Badge key={i} variant="outline" className="text-xs border-blue-300 text-blue-700 bg-blue-50">
+                        {service}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </CardContent>
         </Card>
-
         {/* Appointments Section */}
         <Card className="shadow-sm border border-gray-200">
           <CardHeader className="pb-6">
@@ -446,7 +620,6 @@ export default function DoctorDashboard() {
               </Badge>
             </div>
           </CardHeader>
-
           <CardContent>
             {loading ? (
               <div className="flex items-center justify-center py-12">
@@ -507,7 +680,6 @@ export default function DoctorDashboard() {
                               {getInitials(booking.fullName)}
                             </AvatarFallback>
                           </Avatar>
-
                           <div className="flex-1 min-w-0 w-full">
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 gap-2">
                               <div>
@@ -550,7 +722,6 @@ export default function DoctorDashboard() {
                                 {booking.consent ? "Consented" : "No Consent"}
                               </Badge>
                             </div>
-
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
                               <div className="space-y-1">
                                 <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Service</p>
@@ -579,7 +750,6 @@ export default function DoctorDashboard() {
                                 </Badge>
                               </div>
                             </div>
-
                             {booking.message && (
                               <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
                                 <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
@@ -588,7 +758,6 @@ export default function DoctorDashboard() {
                                 <p className="text-sm text-gray-700 leading-relaxed">{booking.message}</p>
                               </div>
                             )}
-
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-3 border-t border-gray-100 gap-2 sm:gap-0">
                               <div className="flex items-center gap-2 text-xs text-gray-500">
                                 <svg
@@ -630,7 +799,6 @@ export default function DoctorDashboard() {
                                     </Label>
                                   </div>
                                 )}
-
                                 {/* Status Badge */}
                                 <Badge
                                   variant={booking.status === "completed" ? "secondary" : "outline"}
@@ -642,7 +810,6 @@ export default function DoctorDashboard() {
                                 >
                                   {booking.status === "completed" ? "Completed" : "Pending"}
                                 </Badge>
-
                                 {/* Message Button */}
                                 <Button
                                   variant="outline"
@@ -667,7 +834,7 @@ export default function DoctorDashboard() {
                                     strokeWidth="2"
                                     viewBox="0 0 24 24"
                                   >
-                                    <path d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                    <path d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V9a2 2 0 00-2-2h-2" />
                                   </svg>
                                   Message
                                 </Button>
@@ -685,7 +852,6 @@ export default function DoctorDashboard() {
           </CardContent>
         </Card>
       </div>
-
       {/* Professional Confirmation Dialog */}
       <Dialog open={confirmDialog.isOpen} onOpenChange={handleCancelConfirmation}>
         <DialogContent className="sm:max-w-md">

@@ -13,6 +13,7 @@ type Dentist = {
   imageUrl?: string;
   bio?: string;
   qualifications?: string[];
+  services?: string[];
   availability?: {
     [key: string]: string[];
   };
@@ -131,27 +132,47 @@ export default function DentistsPage() {
                   {/* Availability Section */}
                   <div className="mb-6">
                     <h3 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wide">Availability</h3>
-                    {dentist.availability && Object.keys(dentist.availability).some(day => dentist.availability && dentist.availability[day]?.length > 0) ? (
+                    {dentist.availability && Object.keys(dentist.availability).some(date => dentist.availability && dentist.availability[date]?.length > 0) ? (
                       <div className="space-y-2">
-                        {Object.entries(dentist.availability).map(([day, slots]) => (
-                          slots && slots.length > 0 ? (
-                            <div key={day} className="flex items-start gap-2">
-                              <span className="capitalize w-16 font-medium text-gray-700">{day}:</span>
-                              <div className="flex flex-wrap gap-2">
-                                {slots.map((slot, i) => (
-                                  <span key={i} className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded text-xs border border-blue-200">
-                                    {slot}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          ) : null
-                        ))}
+                        {Object.entries(dentist.availability)
+                          .sort(([a], [b]) => a.localeCompare(b))
+                          .map(([date, slots]) => {
+                            const slotArr = Array.isArray(slots) ? slots : [];
+                            return (
+                              slotArr.length > 0 ? (
+                                <div key={date} className="flex items-start gap-2">
+                                  <span className="w-32 font-medium text-blue-700 text-sm">{new Date(date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}:</span>
+                                  <div className="flex flex-wrap gap-2">
+                                    {slotArr.map((slot, i) => (
+                                      <span key={i} className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded text-xs border border-blue-200">
+                                        {slot}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              ) : null
+                            );
+                          })}
                       </div>
                     ) : (
                       <span className="text-gray-500 text-sm">No availability set</span>
                     )}
                   </div>
+
+                  {/* Services */}
+                  {dentist.services && dentist.services.length > 0 && (
+                    <div className="mb-6">
+                      <h3 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wide">Services</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {dentist.services.map((service, i) => (
+                          <span key={i} className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded text-xs border border-blue-200">
+                            {service}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Qualifications */}
                   {dentist.qualifications && dentist.qualifications.length > 0 && (
                     <div className="mb-6">

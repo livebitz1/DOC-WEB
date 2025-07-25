@@ -30,6 +30,17 @@ if (process.env.NODE_ENV === 'production') {
 export async function POST(request: Request) {
   try {
     const data = await request.json();
+    // Check if slot is already booked for this doctor, date, and time
+    const existing = await prisma.booking.findFirst({
+      where: {
+        doctor: data.doctor,
+        preferredDate: new Date(data.preferredDate),
+        preferredTime: data.preferredTime,
+      },
+    });
+    if (existing) {
+      return NextResponse.json({ error: "This slot is already booked by another user." }, { status: 409 });
+    }
     const booking = await prisma.booking.create({
       data: {
         fullName: data.fullName,

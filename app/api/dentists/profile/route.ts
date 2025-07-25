@@ -27,18 +27,18 @@ export async function POST(request: Request) {
     const dentist = await prisma.dentist.findUnique({ where: { email: user.email } });
     if (!dentist) return NextResponse.json({ error: 'Dentist profile not found' }, { status: 404 });
 
-    // Debug: log incoming data
-    console.log('Updating dentist profile:', {
-      imageUrl: data.imageUrl,
-      availability: data.availability
-    });
-
-    // Only update availability if it's a valid object
+    // Only update fields if provided
     const updateData: any = {
       imageUrl: data.imageUrl || dentist.imageUrl
     };
     if (data.availability && typeof data.availability === 'object') {
       updateData.availability = data.availability;
+    }
+    // Always store services as a valid array of strings (never undefined/null)
+    if (Array.isArray(data.services)) {
+      updateData.services = data.services.filter((s: any) => typeof s === 'string' && s.trim() !== '');
+    } else {
+      updateData.services = [];
     }
 
     const updated = await prisma.dentist.update({

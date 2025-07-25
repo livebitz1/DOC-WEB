@@ -14,12 +14,13 @@ if (process.env.NODE_ENV === 'production') {
 export async function GET() {
   try {
     const dentists = await prisma.dentist.findMany({ orderBy: { createdAt: 'desc' } });
-    // Ensure availability is always returned as an object, not null
-    const dentistsWithAvailability = dentists.map(d => ({
+    // Ensure availability and services are always returned as an object/array, not null
+    const dentistsWithDefaults = dentists.map((d: any) => ({
       ...d,
-      availability: d.availability || { mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] }
+      availability: d.availability || { mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] },
+      services: Array.isArray(d.services) ? d.services : [],
     }));
-    return NextResponse.json(dentistsWithAvailability);
+    return NextResponse.json(dentistsWithDefaults);
   } catch (error) {
     // no disconnect
     return NextResponse.json({ error: String(error) }, { status: 500 });
