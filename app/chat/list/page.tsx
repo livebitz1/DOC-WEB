@@ -52,8 +52,18 @@ export default function ChatListPage() {
         // Fetch profile for each chat
         const entries = await Promise.all(
           data.map(async (chat: any) => {
-            const profile = await fetchProfile({ userType, chat });
-            return [chat.chatId, profile];
+            // Always fetch the profile of the person you are talking to, not yourself
+            if (userType === "doctor") {
+              // For doctor, always use patientEmail
+              const patientEmail = chat.patientEmail;
+              const profile = patientEmail ? await fetchProfile({ userType: "doctor", chat: { patientEmail } }) : { name: "Unknown", imageUrl: "/globe.svg" };
+              return [chat.chatId, profile];
+            } else {
+              // For patient, always use doctorId
+              const doctorId = chat.doctorId;
+              const profile = doctorId ? await fetchProfile({ userType: "patient", chat: { doctorId } }) : { name: "Unknown", imageUrl: "/globe.svg" };
+              return [chat.chatId, profile];
+            }
           })
         );
         setProfiles(Object.fromEntries(entries));
@@ -111,7 +121,7 @@ export default function ChatListPage() {
                     >
                       <Avatar className="w-16 h-16 mr-7 shadow border border-gray-200">
                         <AvatarImage src={profile.imageUrl} alt={profile.name} />
-                        <AvatarFallback>{profile.name[0]?.toUpperCase() || "U"}</AvatarFallback>
+                        <AvatarFallback>{(profile.name && profile.name[0]?.toUpperCase()) || "U"}</AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0 text-left">
                         <div className="flex items-center justify-between">

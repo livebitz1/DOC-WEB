@@ -10,9 +10,16 @@ if (process.env.NODE_ENV === 'production') {
   prisma = (global as any).prisma;
 }
 
-// GET: Fetch all dentist profiles
-export async function GET() {
+// GET: Fetch all dentist profiles or a specific dentist by doctorId
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const doctorId = searchParams.get("doctorId");
   try {
+    if (doctorId) {
+      const dentist = await prisma.dentist.findUnique({ where: { id: Number(doctorId) } });
+      if (!dentist) return NextResponse.json({ error: "Dentist not found" }, { status: 404 });
+      return NextResponse.json(dentist);
+    }
     const dentists = await prisma.dentist.findMany({ orderBy: { createdAt: 'desc' } });
     // Ensure availability and services are always returned as an object/array, not null
     const dentistsWithDefaults = dentists.map((d: any) => ({

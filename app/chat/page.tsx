@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, Suspense } from "react";
+import { fetchProfile } from "./fetchProfile";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,7 +41,7 @@ function ChatPageContent() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [patient, setPatient] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
   const [showFirstMessageNotice, setShowFirstMessageNotice] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
   // Notification state
@@ -97,7 +98,31 @@ function ChatPageContent() {
   useEffect(() => {
     if (selectedChat) {
       fetchMessages(selectedChat.chatId);
-      fetchPatient(selectedChat.patientEmail);
+      // Fallback: ensure patientEmail and doctorId are present from URL if missing
+      let chatForProfile = { ...selectedChat };
+      const urlPatientEmail = searchParams.get("patientEmail");
+      const urlDoctorId = searchParams.get("doctorId");
+      if (userType === "doctor" && !chatForProfile.patientEmail && urlPatientEmail) {
+        chatForProfile.patientEmail = urlPatientEmail;
+      }
+      if (userType === "patient" && !chatForProfile.doctorId && urlDoctorId) {
+        chatForProfile.doctorId = urlDoctorId;
+      }
+      // Always fetch the profile of the person you are talking to, not yourself
+      // For doctor: show patient (by patientEmail), for patient: show doctor (by doctorId)
+      if (userType === "doctor") {
+        // Always use patientEmail from chat or URL
+        const patientEmail = chatForProfile.patientEmail || searchParams.get("patientEmail");
+        if (patientEmail) {
+          fetchProfile({ userType: "doctor", chat: { patientEmail } }).then(setProfile);
+        }
+      } else if (userType === "patient") {
+        // Always use doctorId from chat or URL
+        const doctorId = chatForProfile.doctorId || searchParams.get("doctorId");
+        if (doctorId) {
+          fetchProfile({ userType: "patient", chat: { doctorId } }).then(setProfile);
+        }
+      }
     }
   }, [selectedChat]);
   useEffect(() => {
@@ -123,10 +148,7 @@ function ChatPageContent() {
     const data = await res.json();
     setMessages(data);
   }
-  async function fetchPatient(email: string) {
-    const res = await fetch(`/api/patient?email=${email}`);
-    if (res.ok) setPatient(await res.json());
-  }
+  // Removed fetchPatient and setPatient, now using fetchProfile and setProfile
   async function markMessagesAsRead(chatId: number) {
     await fetch(`/api/message`, {
       method: "PATCH",
@@ -177,16 +199,16 @@ function ChatPageContent() {
         <div className="flex items-center gap-3 flex-1">
           <div className="w-11 h-11 rounded-full bg-gray-200 overflow-hidden">
             {/* Avatar */}
-            {patient?.imageUrl ? (
-              <img src={patient.imageUrl} alt={patient.fullName} className="w-full h-full object-cover" />
+            {profile?.imageUrl ? (
+              <img src={profile.imageUrl} alt={profile.name} className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-lg font-bold text-gray-600 bg-gray-200">
-                {patient?.fullName?.[0]?.toUpperCase() || "W"}
+                {profile?.name?.[0]?.toUpperCase() || "W"}
               </div>
             )}
           </div>
           <div className="flex flex-col flex-1 min-w-0">
-            <span className="font-semibold text-base text-gray-900 truncate">{patient?.fullName || "Wade Warren"}</span>
+            <span className="font-semibold text-base text-gray-900 truncate">{profile?.name || "Wade Warren"}</span>
             <span className="text-xs text-green-500 font-medium">Online</span>
           </div>
         </div>
