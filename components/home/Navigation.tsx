@@ -29,7 +29,9 @@ export function Navigation({ menuOpen, setMenuOpen }: { menuOpen: boolean; setMe
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center gap-3">
-            <img src="/logo.jpeg" alt="Santepheap Dental Clinic Logo" className="w-40 h-15 rounded-lg object-contain bg-white border border-gray-200" />
+            <a href="/">
+              <img src="/logo.jpeg" alt="Santepheap Dental Clinic Logo" className="w-40 h-15 rounded-lg object-contain bg-white border border-gray-200 cursor-pointer" />
+            </a>
             <div>
               <span className="font-bold text-lg text-gray-900">SANTEHEAP</span>
             </div>

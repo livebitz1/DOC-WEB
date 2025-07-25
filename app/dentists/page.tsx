@@ -1,4 +1,5 @@
 "use client"
+import { Navigation } from "@/components/home/Navigation"
 import React, { useState } from "react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -20,6 +21,7 @@ type Dentist = {
 };
 
 export default function DentistsPage() {
+  const [menuOpen, setMenuOpen] = React.useState(false);
   const [search, setSearch] = React.useState("");
   const [dentists, setDentists] = React.useState<Dentist[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -68,7 +70,9 @@ export default function DentistsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
+      <Navigation menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
+      <div className="min-h-screen bg-gray-50">
       {/* Header Section */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -334,6 +338,7 @@ export default function DentistsPage() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

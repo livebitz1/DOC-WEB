@@ -1,4 +1,6 @@
+
 "use client"
+import { Navigation } from "@/components/home/Navigation"
 
 import { useEffect, useState } from "react"
 import { useUser } from "@clerk/nextjs"
@@ -49,6 +51,8 @@ interface Booking {
 }
 
 export default function DoctorDashboard() {
+  // Navbar state for Navigation
+  const [menuOpen, setMenuOpen] = useState(false);
   // --- Profile Customization State ---
   const [profileImage, setProfileImage] = useState<string | null>(null)
   const [availability, setAvailability] = useState<any>({
@@ -337,7 +341,9 @@ export default function DoctorDashboard() {
   }
   // Main Doctor Dashboard UI (only if dentist exists)
   return (
-    <main className="min-h-screen bg-gray-50">
+    <>
+      <Navigation menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
+      <main className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-8">
         {/* Profile Customization Card */}
         <Card className="shadow-sm border border-blue-200 mb-8">
@@ -926,5 +932,6 @@ export default function DoctorDashboard() {
         </DialogContent>
       </Dialog>
     </main>
+    </>
   )
 }
