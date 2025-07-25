@@ -1,7 +1,7 @@
-
 "use client";
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import styled from "styled-components";
 import RefreshButton from "@/components/ui/RefreshButton";
@@ -9,15 +9,32 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 // --- ChatPage: WhatsApp-like UI, fullscreen, as per image ---
 import ImageUpload from "./ImageUpload";
-import { FiPhone, FiMoreVertical, FiArrowLeft, FiImage, FiVideo } from "react-icons/fi";
+import { FiPhone, FiMoreVertical, FiArrowLeft, FiImage, FiVideo, FiList } from "react-icons/fi";
+import NotificationBell from "./NotificationBell";
+import Link from "next/link";
 
 function ChatPageContent() {
-  // ...existing state and logic...
   const [searchEmail, setSearchEmail] = useState("");
   const router = useRouter();
   const searchParams = useSearchParams();
-  const doctorId = 1;
-  const userType = "doctor";
+  const { user, isLoaded } = useUser();
+  // Determine userType and userId
+  // Patient: userType = 'patient', userId = email; Doctor: userType = 'doctor', userId = doctorId
+  let userType = "patient";
+  let userId: string | number | undefined = undefined;
+  let doctorId: number | undefined = undefined;
+  if (user) {
+    if (user.publicMetadata?.role === "doctor" && user.publicMetadata?.doctorId) {
+      userType = "doctor";
+      // doctorId may be string or number, ensure number
+      const docId = Number(user.publicMetadata.doctorId);
+      userId = docId;
+      doctorId = docId;
+    } else if (user.primaryEmailAddress?.emailAddress) {
+      userType = "patient";
+      userId = user.primaryEmailAddress.emailAddress;
+    }
+  }
   const [chatSessions, setChatSessions] = useState([]);
   const [selectedChat, setSelectedChat] = useState<any>(null);
   const [messages, setMessages] = useState([]);
@@ -26,11 +43,15 @@ function ChatPageContent() {
   const [patient, setPatient] = useState<any>(null);
   const [showFirstMessageNotice, setShowFirstMessageNotice] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
+  // Notification state
+  const [hasNotification, setHasNotification] = useState(false);
+  const [notifiedChat, setNotifiedChat] = useState<any>(null);
 
   useEffect(() => {
+    if (!isLoaded) return;
     setPageLoading(true);
     fetchChatSessions().finally(() => setPageLoading(false));
-  }, []);
+  }, [isLoaded]);
   useEffect(() => {
     async function ensureSelectedChat() {
       const searchPatientEmail = searchParams.get("patientEmail");
@@ -46,6 +67,7 @@ function ChatPageContent() {
       if (foundChat) {
         setSelectedChat(foundChat);
       } else if (searchPatientEmail && doctorId) {
+        // For doctors, create chat with selected patient
         const res = await fetch("/api/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -59,6 +81,13 @@ function ChatPageContent() {
           unreadCount: 0,
           lastMessage: null,
         });
+      } else if (searchPatientEmail && userType === "patient") {
+        // For patients, need to select chat with doctor (from search param)
+        // Try to find doctorId from chatSessions
+        const found = chatSessions.find((c: any) => c.patientEmail === userId);
+        if (found) {
+          setSelectedChat(found);
+        }
       } else if (chatSessions && chatSessions.length > 0 && !selectedChat) {
         setSelectedChat(chatSessions[0]);
       }
@@ -77,10 +106,17 @@ function ChatPageContent() {
     if (unread) markMessagesAsRead(selectedChat.chatId);
   }, [messages, selectedChat]);
   async function fetchChatSessions() {
-    const res = await fetch(`/api/chat/notifications?userType=${userType}&userId=${doctorId}`);
+    if (!userId) return;
+    const res = await fetch(`/api/chat/notifications?userType=${userType}&userId=${encodeURIComponent(String(userId))}`);
     const data = await res.json();
     setChatSessions(data);
-    if (data.length > 0) setSelectedChat(data[0]);
+    // For patients, check for unread messages from doctor
+    if (userType === "patient") {
+      const unread = data.find((c: any) => c.unreadCount > 0 && c.lastMessage?.sender === "doctor");
+      setHasNotification(!!unread);
+      setNotifiedChat(unread || null);
+    }
+    if (data.length > 0 && !selectedChat) setSelectedChat(data[0]);
   }
   async function fetchMessages(chatId: number) {
     const res = await fetch(`/api/chat?chatId=${chatId}`);
@@ -117,7 +153,7 @@ function ChatPageContent() {
   }
 
   // --- WhatsApp-like UI ---
-  if (pageLoading) {
+  if (pageLoading || !isLoaded) {
     return (
       <div className="w-full h-screen flex items-center justify-center bg-[#F8FAF8]">
         <div className="flex flex-col items-center gap-4">
@@ -135,7 +171,7 @@ function ChatPageContent() {
     <div className="w-full h-screen bg-[#F8FAF8] flex flex-col">
       {/* Header */}
       <div className="flex items-center px-4 py-3 bg-white shadow-sm" style={{ minHeight: 70 }}>
-        <button className="mr-2 text-gray-500 hover:text-black md:hidden" aria-label="Back">
+        <button className="mr-2 text-gray-500 hover:text-black md:hidden" aria-label="Back" onClick={() => router.push('/chat/list')}>
           <FiArrowLeft size={24} />
         </button>
         <div className="flex items-center gap-3 flex-1">
@@ -155,7 +191,25 @@ function ChatPageContent() {
           </div>
         </div>
         <button className="mx-2 text-gray-500 hover:text-black" aria-label="Call"><FiPhone size={22} /></button>
+        {/* List page link button */}
+        <Link href="/chat/list" className="mx-2 text-gray-500 hover:text-[#5EC16D] flex items-center justify-center" aria-label="Chat List">
+          <FiList size={22} />
+        </Link>
         <button className="mx-2 text-gray-500 hover:text-black" aria-label="Video Call"><FiVideo size={22} /></button>
+        {/* Notification Bell for patients */}
+        {userType === "patient" && (
+          <NotificationBell
+            hasNotification={hasNotification}
+            onClick={() => {
+              if (notifiedChat) {
+                setSelectedChat(notifiedChat);
+                setHasNotification(false);
+                // Mark as read
+                markMessagesAsRead(notifiedChat.chatId);
+              }
+            }}
+          />
+        )}
         <button className="text-gray-500 hover:text-black" aria-label="More"><FiMoreVertical size={22} /></button>
       </div>
 
