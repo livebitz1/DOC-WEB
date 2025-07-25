@@ -152,9 +152,23 @@ export default function DoctorDashboard() {
   const router = useRouter();
   const { user, isLoaded } = useUser();
   useEffect(() => {
-    if (isLoaded && user && user.publicMetadata?.role !== "doctor") {
-      router.replace("/");
+    async function checkDoctorAccess() {
+      if (isLoaded && user?.emailAddresses?.[0]?.emailAddress) {
+        try {
+          const res = await fetch("/api/dentists");
+          const dentists = await res.json();
+          const match = dentists.find((d: any) => d.email === user.emailAddresses[0].emailAddress);
+          if (!match) {
+            router.replace("/");
+          }
+        } catch {
+          router.replace("/");
+        }
+      } else if (isLoaded) {
+        router.replace("/");
+      }
     }
+    checkDoctorAccess();
   }, [isLoaded, user, router]);
 
   const [bookings, setBookings] = useState<Booking[]>([])
