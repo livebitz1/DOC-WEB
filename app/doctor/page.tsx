@@ -1,7 +1,6 @@
-
 "use client"
 import { Navigation } from "@/components/home/Navigation"
-
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react"
 import { useUser } from "@clerk/nextjs"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -150,7 +149,14 @@ export default function DoctorDashboard() {
     setTimeout(() => setProfileSaved(false), 2000)
   }
   // --- End Profile Customization State ---
-  const { user, isLoaded } = useUser()
+  const router = useRouter();
+  const { user, isLoaded } = useUser();
+  useEffect(() => {
+    if (isLoaded && user && user.publicMetadata?.role !== "doctor") {
+      router.replace("/");
+    }
+  }, [isLoaded, user, router]);
+
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
@@ -699,7 +705,7 @@ export default function DoctorDashboard() {
                                       strokeWidth="2"
                                       viewBox="0 0 24 24"
                                     >
-                                      <path d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                      <path d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V9a2 2 0 00-2-2h-2" />
                                     </svg>
                                     {booking.email}
                                   </div>
