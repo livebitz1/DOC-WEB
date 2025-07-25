@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { fetchProfile } from "../fetchProfile";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
@@ -28,6 +28,9 @@ export default function ChatListPage() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
+  const wsRef = useRef<WebSocket | null>(null);
+  // Track which chatIds have been joined
+  const joinedChatIdsRef = useRef<Set<number>>(new Set());
 
   // Determine userType and userId
   let userType = "patient";
@@ -59,9 +62,9 @@ export default function ChatListPage() {
               const profile = patientEmail ? await fetchProfile({ userType: "doctor", chat: { patientEmail } }) : { name: "Unknown", imageUrl: "/globe.svg" };
               return [chat.chatId, profile];
             } else {
-              // For patient, always use doctorId
-              const doctorId = chat.doctorId;
-              const profile = doctorId ? await fetchProfile({ userType: "patient", chat: { doctorId } }) : { name: "Unknown", imageUrl: "/globe.svg" };
+              // For patient, always use doctorEmail
+              const doctorEmail = chat.doctorEmail || chat.doctor?.email || chat.email;
+              const profile = doctorEmail ? await fetchProfile({ userType: "patient", chat: { doctorEmail } }) : { name: "Unknown", imageUrl: "/globe.svg" };
               return [chat.chatId, profile];
             }
           })
@@ -70,6 +73,67 @@ export default function ChatListPage() {
       })
       .finally(() => setLoading(false));
   }, [isLoaded, userId, userType]);
+
+  // WebSocket connection for real-time chat list updates
+  useEffect(() => {
+    if (!userId) return;
+    // Clean up previous connection
+    if (wsRef.current) wsRef.current.close();
+    joinedChatIdsRef.current = new Set(); // Reset joined chatIds on new connection
+    const ws = new window.WebSocket("ws://localhost:3002");
+    wsRef.current = ws;
+    ws.onopen = () => {
+      // Join all chat rooms for this user
+      chats.forEach(chat => {
+        ws.send(JSON.stringify({ type: "join", chatId: chat.chatId }));
+        joinedChatIdsRef.current.add(chat.chatId);
+      });
+    };
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === "message" && data.message) {
+          // Re-fetch chat notifications when a new message is received
+          fetch(`/api/chat/notifications?userType=${userType}&userId=${encodeURIComponent(String(userId))}`)
+            .then(res => res.json())
+            .then(async data => {
+              setChats(data);
+              // Fetch profile for each chat
+              const entries = await Promise.all(
+                data.map(async (chat: any) => {
+                  if (userType === "doctor") {
+                    const patientEmail = chat.patientEmail;
+                    const profile = patientEmail ? await fetchProfile({ userType: "doctor", chat: { patientEmail } }) : { name: "Unknown", imageUrl: "/globe.svg" };
+                    return [chat.chatId, profile];
+                  } else {
+                    const doctorEmail = chat.doctorEmail || chat.doctor?.email || chat.email;
+                    const profile = doctorEmail ? await fetchProfile({ userType: "patient", chat: { doctorEmail } }) : { name: "Unknown", imageUrl: "/globe.svg" };
+                    return [chat.chatId, profile];
+                  }
+                })
+              );
+              setProfiles(Object.fromEntries(entries));
+            });
+        }
+      } catch {}
+    };
+    ws.onclose = () => {};
+    return () => {
+      ws.close();
+    };
+  }, [userId, userType]);
+
+  // Dynamically join new chat rooms as they appear in chats
+  useEffect(() => {
+    const ws = wsRef.current;
+    if (!ws || ws.readyState !== 1) return;
+    chats.forEach(chat => {
+      if (!joinedChatIdsRef.current.has(chat.chatId)) {
+        ws.send(JSON.stringify({ type: "join", chatId: chat.chatId }));
+        joinedChatIdsRef.current.add(chat.chatId);
+      }
+    });
+  }, [chats]);
 
   const filtered = chats.filter((c: any) => {
     // Prefer fullName/email for patient, and doctorName for doctor if available
