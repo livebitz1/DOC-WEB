@@ -11,9 +11,21 @@ const io = new Server(server, {
 
 // Map of chatId to Set of socket ids
 const chatRooms = new Map();
+// Map of userId/email to online status (true/false)
+const userStatus = new Map();
 
 io.on('connection', (socket) => {
   console.log('[Socket.io] Client connected:', socket.id);
+
+  // Track user online status
+  socket.on('user-online', ({ userType, userId }) => {
+    // Always expect userId to be email (for both doctor and patient)
+    if (userId) {
+      userStatus.set(userId, true);
+      io.emit('user-status', { userId, status: 'online' });
+      socket.userId = userId;
+    }
+  });
 
   socket.on('join', (chatId) => {
     socket.join(String(chatId));
@@ -55,6 +67,11 @@ io.on('connection', (socket) => {
     if (socket.chatId && chatRooms.has(socket.chatId)) {
       chatRooms.get(socket.chatId).delete(socket.id);
       if (chatRooms.get(socket.chatId).size === 0) chatRooms.delete(socket.chatId);
+    }
+    // Mark user as offline (always use email)
+    if (socket.userId) {
+      userStatus.set(socket.userId, false);
+      io.emit('user-status', { userId: socket.userId, status: 'offline' });
     }
     console.log('[Socket.io] Client disconnected:', socket.id);
   });

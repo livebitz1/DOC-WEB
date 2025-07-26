@@ -17,11 +17,18 @@ import { Button } from "@/components/ui/button";
 // --- ChatPage: WhatsApp-like UI, fullscreen, as per image ---
 import ImageUpload from "./ImageUpload";
 import { FiPhone, FiMoreVertical, FiArrowLeft, FiImage, FiVideo, FiList } from "react-icons/fi";
-import { MdSend } from "react-icons/md";
+import { MdSend, MdOutlineEmojiEmotions } from "react-icons/md";
 // import NotificationBell from "./NotificationBell";
 import Link from "next/link";
 import { useRef } from "react";
 import { io, Socket } from "socket.io-client";
+
+import dynamic from "next/dynamic";
+// Dynamically import EmojiPicker for client-side only rendering
+const EmojiMartPicker = dynamic<{ onSelect: (emoji: string) => void }>(
+  () => import("../../components/EmojiPicker"),
+  { ssr: false }
+);
 
 function ChatPageContent() {
   // Clean, single declarations for all state and variables
@@ -33,7 +40,6 @@ function ChatPageContent() {
   const [videoModalOpen, setVideoModalOpen] = useState(false);
   const [videoRoomUrl, setVideoRoomUrl] = useState(null);
   const [videoLoading, setVideoLoading] = useState(false);
-  // ...existing code...
   // Doctor/patient detection using dentist DB (same as Navigation)
   const [userType, setUserType] = useState<"doctor" | "patient">("patient");
   const [userId, setUserId] = useState<string | number | undefined>(undefined);
@@ -67,6 +73,7 @@ function ChatPageContent() {
   const [selectedChat, setSelectedChat] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [input, setInput] = useState("");
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [loading, setLoading] = useState(false);
   const [profile, setProfile] = useState<any>(null);
   // Removed debug state for profile fetch
@@ -75,6 +82,8 @@ function ChatPageContent() {
   // Notification logic removed
   // --- SOCKET.IO ---
   const socketRef = useRef<Socket | null>(null);
+  // Online status state for the other user
+  const [otherUserStatus, setOtherUserStatus] = useState<'online' | 'offline'>("offline");
 
   useEffect(() => {
     if (!isLoaded || !userId) return;
@@ -217,7 +226,7 @@ function ChatPageContent() {
   }, [messages, selectedChat]);
   // Connect to Socket.IO and join chat room
   useEffect(() => {
-    if (!selectedChat?.chatId) return;
+    if (!selectedChat?.chatId || !userType || !userId) return;
     // Clean up previous connection
     if (socketRef.current) {
       socketRef.current.disconnect();
@@ -227,9 +236,23 @@ function ChatPageContent() {
       withCredentials: true,
     });
     socketRef.current = socket;
+    // Determine myId and otherId for status tracking
+    // Always use email for online/offline status
+    let myEmail = null, otherEmail = null;
+    if (userType === "doctor") {
+      myEmail = user?.primaryEmailAddress?.emailAddress;
+      otherEmail = selectedChat.patientEmail;
+    } else {
+      myEmail = userId; // patient email
+      otherEmail = selectedChat.doctorEmail;
+    }
     socket.on("connect", () => {
       console.log(`[Socket.IO] Connected. Joining chatId: ${selectedChat.chatId}`);
       socket.emit("join", selectedChat.chatId);
+      // Emit user-online with userType and email
+      if (myEmail) {
+        socket.emit("user-online", { userType, userId: myEmail });
+      }
     });
     socket.on("message", (data: any) => {
       if (data && data.message) {
@@ -258,17 +281,36 @@ function ChatPageContent() {
         setVideoLoading(false);
       }
     });
+    // Listen for user-status events (online/offline)
+    socket.on("user-status", ({ userId: statusUserId, status }) => {
+      if (statusUserId && otherEmail && String(statusUserId).toLowerCase() === String(otherEmail).toLowerCase()) {
+        setOtherUserStatus(status === "online" ? "online" : "offline");
+      }
+    });
     socket.on("disconnect", (reason: any) => {
-      console.log(`[Socket.IO] Disconnected from chatId: ${selectedChat.chatId}`, reason);
+      console.log("[Socket.IO] Disconnected:", reason);
     });
-    socket.on("connect_error", (err: any) => {
-      console.error("[Socket.IO] Connection error:", err);
+    // Save last received socket message for debug
+    socket.onAny((event, ...args) => {
+      if (typeof window !== 'undefined') {
+        window.__lastSocketMessage = { event, args };
+      }
     });
-    return () => {
-      socket.disconnect();
-      console.log(`[Socket.IO] Closed connection for chatId: ${selectedChat?.chatId}`);
+    // Emit user-offline on tab close
+    const handleBeforeUnload = () => {
+      if (myEmail) {
+        socket.emit("user-offline", { userType, userId: myEmail });
+      }
     };
-  }, [selectedChat?.chatId, userType]);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      if (myEmail) {
+        socket.emit("user-offline", { userType, userId: myEmail });
+      }
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      socket.disconnect();
+    };
+  }, [selectedChat, userType, userId]);
   async function fetchChatSessions() {
     if (!userId) {
       console.log('[fetchChatSessions] No userId, skipping fetch. userType:', userType, 'userId:', userId);
@@ -380,7 +422,9 @@ function ChatPageContent() {
           </div>
           <div className="flex flex-col flex-1 min-w-0">
             <span className="font-semibold text-base text-gray-900 truncate">{profile?.name || "Wade Warren"}</span>
-            <span className="text-xs text-green-500 font-medium">Online</span>
+            <span className={otherUserStatus === "online" ? "text-xs text-green-500 font-medium" : "text-xs text-gray-400 font-medium"}>
+              {otherUserStatus === "online" ? "Online" : "Offline"}
+            </span>
           </div>
         </div>
         {/* List page link button */}
@@ -566,16 +610,35 @@ function ChatPageContent() {
               <AvatarFallback>{profile?.name?.[0]?.toUpperCase() || "N"}</AvatarFallback>
             </Avatar>
           </div>
-          <input
-            type="text"
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            className="flex-1 rounded-full px-3 sm:px-5 py-2 sm:py-3 text-[15px] sm:text-base bg-[#F8FAF8] border border-gray-200 focus:outline-none focus:border-green-400 placeholder-gray-400 transition-all"
-            placeholder="Message..."
-            disabled={userType === "doctor" && (!profile || !profile.name)}
-            style={{ minWidth: 0 }}
-            aria-label="Type your message"
-          />
+          <div className="relative flex-1">
+            <input
+              type="text"
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              className="w-full rounded-full px-3 sm:px-5 py-2 sm:py-3 text-[15px] sm:text-base bg-[#F8FAF8] border border-gray-200 focus:outline-none focus:border-green-400 placeholder-gray-400 transition-all"
+              placeholder="Message..."
+              disabled={userType === "doctor" && (!profile || !profile.name)}
+              style={{ minWidth: 0 }}
+              aria-label="Type your message"
+            />
+            <button
+              type="button"
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-2xl text-[#5EC16D] hover:text-[#388e3c] focus:outline-none"
+              aria-label="Add emoji"
+              tabIndex={-1}
+              onClick={e => { e.preventDefault(); setShowEmojiPicker(v => !v); }}
+            >
+              <MdOutlineEmojiEmotions />
+            </button>
+            {showEmojiPicker && (
+              <div className="absolute bottom-12 left-0 z-50">
+                <EmojiMartPicker onSelect={(emoji: string) => {
+                  setInput(input + emoji);
+                  setShowEmojiPicker(false);
+                }} />
+              </div>
+            )}
+          </div>
           {selectedChat && (
             <ImageUpload
               chatId={selectedChat.chatId}
