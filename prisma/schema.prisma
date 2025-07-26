@@ -58,6 +58,7 @@ model Message {
   chatId        Int
   sender        String
   content       String?
+  type          String   @default("text") // "text", "image", "video_call_start", "video_call_end"
   createdAt     DateTime @default(now())
   isRead        Boolean  @default(false)
   imageUrl      String?

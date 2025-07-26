@@ -1,4 +1,6 @@
-"use client"
+
+"use client";
+import { FaTooth, FaRegStar, FaTeeth, FaSmile, FaUserMd, FaRegCalendarCheck, FaRegHeart, FaSyringe, FaLayerGroup, FaAlignLeft, FaRegGrinStars, FaRegClock, FaExclamationCircle } from "react-icons/fa";
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -12,13 +14,7 @@ const services = [
     title: "General Dentistry",
     description: "Comprehensive exams, cleanings, and preventive care for optimal oral health.",
     features: ["Regular Checkups", "Professional Cleaning", "Cavity Prevention", "Oral Health Assessment"],
-    icon: (
-      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-        <path d="M12 2L2 7l10 5 10-5-10-5z" />
-        <path d="M2 17l10 5 10-5" />
-        <path d="M2 12l10 5 10-5" />
-      </svg>
-    ),
+    icon: <FaLayerGroup className="w-8 h-8 text-white" />,
     bgColor: "bg-blue-50",
     price: "From $120",
     duration: "45-60 min",
@@ -28,13 +24,7 @@ const services = [
     title: "Dental Implants",
     description: "Permanent solutions for missing teeth with natural-looking results.",
     features: ["Single Tooth Replacement", "Multiple Implants", "Full Mouth Restoration", "Bone Grafting"],
-    icon: (
-      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-        <circle cx="12" cy="12" r="3" />
-        <path d="M12 1v6m0 6v6" />
-        <path d="m21 12-6-6-6 6-6-6" />
-      </svg>
-    ),
+    icon: <FaSyringe className="w-8 h-8 text-white" />,
     bgColor: "bg-emerald-50",
     price: "From $2,500",
     duration: "2-3 visits",
@@ -44,11 +34,7 @@ const services = [
     title: "Teeth Whitening",
     description: "Professional whitening treatments for a brighter, more confident smile.",
     features: ["In-Office Whitening", "Take-Home Kits", "Custom Trays", "Stain Removal"],
-    icon: (
-      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-      </svg>
-    ),
+    icon: <FaRegStar className="w-8 h-8 text-white" />,
     bgColor: "bg-amber-50",
     price: "From $350",
     duration: "60-90 min",
@@ -58,11 +44,7 @@ const services = [
     title: "Orthodontics",
     description: "Straighten your teeth with modern braces and clear aligner solutions.",
     features: ["Traditional Braces", "Clear Aligners", "Invisalign", "Retainers"],
-    icon: (
-      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-        <path d="M4 12h16M4 6h16M4 18h16" />
-      </svg>
-    ),
+    icon: <FaAlignLeft className="w-8 h-8 text-white" />,
     bgColor: "bg-purple-50",
     price: "From $3,200",
     duration: "12-24 months",
@@ -72,12 +54,7 @@ const services = [
     title: "Cosmetic Dentistry",
     description: "Enhance your smile with veneers, bonding, and aesthetic treatments.",
     features: ["Porcelain Veneers", "Dental Bonding", "Smile Makeovers", "Gum Contouring"],
-    icon: (
-      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" />
-        <path d="M8 15s1.5-2 4-2 4 2 4 2" />
-      </svg>
-    ),
+    icon: <FaRegGrinStars className="w-8 h-8 text-white" />,
     bgColor: "bg-pink-50",
     price: "From $800",
     duration: "2-3 visits",
@@ -87,11 +64,7 @@ const services = [
     title: "Emergency Care",
     description: "Immediate dental care for urgent situations and dental emergencies.",
     features: ["24/7 Emergency Line", "Pain Relief", "Trauma Treatment", "Same-Day Appointments"],
-    icon: (
-      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-        <path d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-      </svg>
-    ),
+    icon: <FaExclamationCircle className="w-8 h-8 text-white" />,
     bgColor: "bg-red-50",
     price: "From $150",
     duration: "30-60 min",
@@ -124,33 +97,19 @@ export function ServicesSection() {
           </Badge>
 
           <div className="max-w-3xl mx-auto">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 leading-tight">
-              Comprehensive Dental Care
-            </h2>
+            <div className="flex items-center gap-4 mb-2">
+              <span className="inline-flex items-center justify-center rounded-full bg-blue-50 p-3 shadow text-blue-600">
+                <FaTooth className="w-7 h-7" />
+              </span>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">
+                Comprehensive Dental Care
+              </h2>
+            </div>
+            {/* Removed badges for Family Friendly, Expert Dentists, Advanced Procedures, Easy Scheduling, Compassionate Care as requested */}
             <p className="text-lg lg:text-xl text-gray-600 mb-8 leading-relaxed">
               From routine cleanings to advanced procedures, we provide complete dental solutions for your entire family
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button
-                size="lg"
-                className="bg-[#0077B6] hover:bg-[#005f8e] text-white px-8 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
-              >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 0V6a2 2 0 012-2h4a2 2 0 012 2v1m-6 0h8m-8 0H6a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V9a2 2 0 00-2-2h-2" />
-                </svg>
-                Book Appointment
-              </Button>
-              <Button
-                variant="outline"
-                size="lg"
-                className="border-2 border-[#0077B6] text-[#0077B6] bg-white hover:bg-[#0077B6] hover:text-white px-8 py-3 rounded-lg transition-all duration-200"
-              >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                </svg>
-                Call Now
-              </Button>
-            </div>
+            {/* Removed Book Appointment and Call Now buttons from Comprehensive Dental Care section as requested */}
           </div>
         </div>
 

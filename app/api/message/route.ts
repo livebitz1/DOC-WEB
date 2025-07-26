@@ -55,12 +55,18 @@ if (process.env.NODE_ENV === "production") {
 
 // Send a message
 export async function POST(request: Request) {
-  const { chatId, sender, content, imageUrl } = await request.json();
-  if (!chatId || !sender || (!content && !imageUrl)) {
-    return NextResponse.json({ error: "Missing chatId, sender, and message content or imageUrl" }, { status: 400 });
+  const { chatId, sender, content, imageUrl, type } = await request.json();
+  if (!chatId || !sender || (!content && !imageUrl && !type)) {
+    return NextResponse.json({ error: "Missing chatId, sender, and message content or imageUrl or type" }, { status: 400 });
   }
   const message = await prisma.message.create({
-    data: { chatId, sender, content, imageUrl },
+    data: {
+      chatId,
+      sender,
+      content,
+      imageUrl,
+      type: type || (imageUrl ? "image" : "text"),
+    },
   });
   return NextResponse.json(message);
 }
