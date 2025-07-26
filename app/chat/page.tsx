@@ -242,8 +242,6 @@ function ChatPageContent() {
         // If the message is a video_call_end, close the modal and force fetch latest messages
         if (data.message.type === "video_call_end") {
           setVideoModalOpen(false);
-          // Force full page reload for all users
-          window.location.reload();
         }
         // Mark as read if the message is from the other user
         if (data.message.sender !== userType) {
