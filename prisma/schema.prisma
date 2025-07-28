@@ -65,3 +65,14 @@ model Message {
   imagePublicId String?
   chat          Chat     @relation(fields: [chatId], references: [id])
 }
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  price       Float
+  inStock     Boolean @default(true)
+  imageUrl    String
+  tags        String[] @default([])
+  createdAt   DateTime @default(now())
+}

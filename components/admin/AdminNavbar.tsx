@@ -8,6 +8,8 @@ export default function AdminNavbar() {
         <Link href="/Live701" className="hover:underline">Create Profile</Link>
         <Link href="/Live701/dentists" className="hover:underline">Dentists</Link>
         <Link href="/Live701/bookings" className="hover:underline">Bookings</Link>
+        <Link href="/Live701/admin-add-product" className="hover:underline">Add Product</Link>
+        <Link href="/products/list" className="hover:underline">Products List</Link>
       </div>
     </nav>
   );

@@ -14,6 +14,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 
 const teamMembers = [
   {
@@ -139,50 +140,51 @@ const teamMembers = [
 ]
 
 export function TeamSection() {
-  const [selectedMember, setSelectedMember] = useState<(typeof teamMembers)[0] | null>(null)
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [itemsPerView, setItemsPerView] = useState(3)
+  const [selectedMember, setSelectedMember] = useState<(typeof teamMembers)[0] | null>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [itemsPerView, setItemsPerView] = useState(3);
+  const router = useRouter();
 
   // Responsive items per view
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 768) {
-        setItemsPerView(1)
+        setItemsPerView(1);
       } else if (window.innerWidth < 1024) {
-        setItemsPerView(2)
+        setItemsPerView(2);
       } else {
-        setItemsPerView(3)
+        setItemsPerView(3);
       }
-    }
+    };
 
-    handleResize()
-    window.addEventListener("resize", handleResize)
-    return () => window.removeEventListener("resize", handleResize)
-  }, [])
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
-  const maxIndex = Math.max(0, teamMembers.length - itemsPerView)
-  const canPrev = currentIndex > 0
-  const canNext = currentIndex < maxIndex
+  const maxIndex = Math.max(0, teamMembers.length - itemsPerView);
+  const canPrev = currentIndex > 0;
+  const canNext = currentIndex < maxIndex;
 
   const handlePrev = () => {
     if (canPrev) {
-      setCurrentIndex(currentIndex - 1)
+      setCurrentIndex(currentIndex - 1);
     }
-  }
+  };
 
   const handleNext = () => {
     if (canNext) {
-      setCurrentIndex(currentIndex + 1)
+      setCurrentIndex(currentIndex + 1);
     }
-  }
+  };
 
   const getInitials = (name: string) => {
     return name
       .split(" ")
       .map((n) => n[0])
       .join("")
-      .toUpperCase()
-  }
+      .toUpperCase();
+  };
 
   return (
     <section id="team" className="py-16 lg:py-24 bg-gradient-to-br from-white via-gray-50/30 to-blue-50/20">
@@ -535,7 +537,11 @@ export function TeamSection() {
                         </DialogContent>
                       </Dialog>
 
-                      <Button size="sm" className="flex-1 bg-[#0077B6] hover:bg-[#005f8e] text-white">
+                      <Button
+                        size="sm"
+                        className="flex-1 bg-[#0077B6] hover:bg-[#005f8e] text-white"
+                        onClick={() => router.push('/dentists')}
+                      >
                         <svg
                           className="w-4 h-4 mr-1"
                           fill="none"
@@ -599,6 +605,9 @@ export function TeamSection() {
                     size="lg"
                     variant="secondary"
                     className="bg-white text-[#0077B6] hover:bg-gray-100 px-8 py-3 font-semibold shadow-lg"
+                    onClick={() => {
+                      window.location.href = '/dentists';
+                    }}
                   >
                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                       <path d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 0V6a2 2 0 012-2h4a2 2 0 012 2v1m-6 0h8m-8 0H6a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V9a2 2 0 00-2-2h-2" />
@@ -622,5 +631,5 @@ export function TeamSection() {
         </div>
       </div>
     </section>
-  )
+  );
 }

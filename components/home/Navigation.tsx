@@ -3,6 +3,19 @@ import { useUser, UserButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { AuthButton } from "@/components/home/AuthButton";
+import { FaBoxOpen, FaUserMd, FaCalendarAlt, FaComments, FaTooth, FaQuestionCircle, FaQuoteRight, FaUsers, FaEnvelope } from "react-icons/fa";
+
+const navLinks = [
+  { href: "/products", label: "Products", icon: <FaBoxOpen /> },
+  { href: "/dentists", label: "Dentists", icon: <FaUserMd /> },
+  { href: "/book", label: "Book", icon: <FaCalendarAlt /> },
+  { href: "/chat/list", label: "Chat", icon: <FaComments /> },
+  { href: "#services", label: "Services", icon: <FaTooth /> },
+  { href: "#why", label: "Why Us", icon: <FaQuestionCircle /> },
+  { href: "#testimonials", label: "Testimonials", icon: <FaQuoteRight /> },
+  { href: "#team", label: "Team", icon: <FaUsers /> },
+  { href: "#contact", label: "Contact", icon: <FaEnvelope /> },
+];
 
 export function Navigation({ menuOpen, setMenuOpen }: { menuOpen: boolean; setMenuOpen: (open: boolean) => void }) {
   const { user } = useUser();
@@ -39,8 +52,11 @@ export function Navigation({ menuOpen, setMenuOpen }: { menuOpen: boolean; setMe
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
             <nav className="flex items-center gap-6">
-              {[{ href: "/dentists", label: "Dentists" },{ href: "/book", label: "Book" },{ href: "/chat/list", label: "Chat" },{ href: "#services", label: "Services" },{ href: "#why", label: "Why Us" },{ href: "#testimonials", label: "Testimonials" },{ href: "#team", label: "Team" },{ href: "#contact", label: "Contact" }].map((item) => (
-                <a key={item.href} href={item.href} className="text-gray-600 font-medium text-sm">{item.label}</a>
+              {navLinks.map((item) => (
+                <a key={item.href} href={item.href} className="flex items-center gap-1 text-gray-600 font-medium text-sm hover:text-[#0077B6] transition-colors">
+                  <span className="text-base">{item.icon}</span>
+                  <span>{item.label}</span>
+                </a>
               ))}
               {isDoctor && (
                 <a href="/doctor" className="text-blue-700 font-semibold text-sm">Doctor Dashboard</a>
@@ -63,8 +79,11 @@ export function Navigation({ menuOpen, setMenuOpen }: { menuOpen: boolean; setMe
         {menuOpen && (
           <div className="md:hidden border-t border-gray-200 py-4">
             <div className="flex flex-col gap-3">
-              {[{ href: "/dentists", label: "Dentists" },{ href: "/book", label: "Book" },{ href: "/chat/list", label: "Chat" },{ href: "#services", label: "Services" },{ href: "#why", label: "Why Us" },{ href: "#testimonials", label: "Testimonials" },{ href: "#team", label: "Team" },{ href: "#contact", label: "Contact" }].map((item) => (
-                <a key={item.href} href={item.href} className="text-gray-600 font-medium py-2" onClick={() => setMenuOpen(false)}>{item.label}</a>
+              {navLinks.map((item) => (
+                <a key={item.href} href={item.href} className="flex items-center gap-2 text-gray-600 font-medium py-2 hover:text-[#0077B6] transition-colors" onClick={() => setMenuOpen(false)}>
+                  <span className="text-base">{item.icon}</span>
+                  <span>{item.label}</span>
+                </a>
               ))}
               {isDoctor && (
                 <a href="/doctor" className="text-blue-700 font-semibold py-2 text-center">Doctor Dashboard</a>

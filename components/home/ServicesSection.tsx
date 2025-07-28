@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 
 const services = [
   {
@@ -72,17 +73,16 @@ const services = [
 ]
 
 export function ServicesSection() {
-  const [selectedService, setSelectedService] = useState<number | null>(null)
+  const [selectedService, setSelectedService] = useState<number | null>(null);
+  const router = useRouter();
 
   const handleLearnMore = (serviceId: number) => {
-    setSelectedService(selectedService === serviceId ? null : serviceId)
-  }
+    setSelectedService(selectedService === serviceId ? null : serviceId);
+  };
 
-  const handleBookAppointment = (serviceName: string) => {
-    // This would typically navigate to booking page or open booking modal
-    console.log(`Booking appointment for: ${serviceName}`)
-    // You can add navigation logic here
-  }
+  const handleBookAppointment = () => {
+    router.push('/dentists');
+  };
 
   return (
     <section id="services" className="py-16 lg:py-24 bg-gradient-to-br from-gray-50 via-white to-blue-50/20">
@@ -190,7 +190,7 @@ export function ServicesSection() {
                   </Button>
                   <Button
                     size="sm"
-                    onClick={() => handleBookAppointment(service.title)}
+                    onClick={handleBookAppointment}
                     className="flex-1 bg-[#0077B6] hover:bg-[#005f8e] text-white transition-colors duration-200"
                   >
                     <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -241,6 +241,7 @@ export function ServicesSection() {
           </Card>
         </div>
       </div>
+
     </section>
-  )
+  );
 }
