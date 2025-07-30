@@ -1,6 +1,13 @@
 "use client"
 import { Navigation } from "@/components/home/Navigation"
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
+// Booking type for slot comparison
+type Booking = {
+  id: number;
+  doctor: string;
+  preferredDate: string;
+  preferredTime: string;
+};
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -21,17 +28,30 @@ type Dentist = {
 };
 
 export default function DentistsPage() {
-  const [menuOpen, setMenuOpen] = React.useState(false);
-  const [search, setSearch] = React.useState("");
-  const [dentists, setDentists] = React.useState<Dentist[]>([]);
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
-  const [showEmail, setShowEmail] = React.useState<{[id: number]: boolean}>({});
-  const [copiedEmailId, setCopiedEmailId] = React.useState<number | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [dentists, setDentists] = useState<Dentist[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showEmail, setShowEmail] = useState<{[id: number]: boolean}>({});
+  const [copiedEmailId, setCopiedEmailId] = useState<number | null>(null);
+  const [bookings, setBookings] = useState<Booking[]>([]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     fetchDentists();
+    fetchBookings();
   }, []);
+
+  const fetchBookings = async () => {
+    try {
+      const res = await fetch("/api/bookings");
+      if (!res.ok) throw new Error("Failed to fetch bookings");
+      const data = await res.json();
+      setBookings(Array.isArray(data) ? data : []);
+    } catch (err) {
+      // ignore for now
+    }
+  };
 
   const fetchDentists = async () => {
     setLoading(true);
@@ -147,11 +167,36 @@ export default function DentistsPage() {
                                 <div key={date} className="flex items-start gap-2">
                                   <span className="w-32 font-medium text-blue-700 text-sm">{new Date(date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}:</span>
                                   <div className="flex flex-wrap gap-2">
-                                    {slotArr.map((slot, i) => (
-                                      <span key={i} className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded text-xs border border-blue-200">
-                                        {slot}
-                                      </span>
-                                    ))}
+                                    {slotArr.map((slot, i) => {
+                                      // Normalize date for comparison (YYYY-MM-DD)
+                                      const slotDate = new Date(date).toLocaleDateString("en-CA");
+                                      // Normalize slot string
+                                      const slotStr = String(slot).trim();
+                                      // Find a booking for this dentist, date, and slot
+                                      const isBooked = bookings.some(
+                                        (b) => {
+                                          // Normalize booking date
+                                          const bookingDate = new Date(b.preferredDate).toLocaleDateString("en-CA");
+                                          // Normalize booking time
+                                          const bookingTime = String(b.preferredTime).trim();
+                                          return (
+                                            b.doctor === dentist.name &&
+                                            bookingDate === slotDate &&
+                                            bookingTime === slotStr
+                                          );
+                                        }
+                                      );
+                                      return (
+                                        <span key={i} className={
+                                          isBooked
+                                            ? "px-2 py-0.5 bg-red-100 text-red-700 rounded text-xs border border-red-300 font-semibold flex items-center gap-1"
+                                            : "px-2 py-0.5 bg-blue-100 text-blue-800 rounded text-xs border border-blue-200"
+                                        }>
+                                          {slotStr}
+                                          {isBooked && <span className="ml-1">(Booked)</span>}
+                                        </span>
+                                      );
+                                    })}
                                   </div>
                                 </div>
                               ) : null

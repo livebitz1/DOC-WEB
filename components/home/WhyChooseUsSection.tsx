@@ -13,7 +13,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { FaShieldAlt, FaUserMd, FaGlobe, FaUsers, FaChartBar, FaDatabase } from "react-icons/fa"
-import { useState } from "react"
+import { ChevronLeft, ChevronRight } from "lucide-react"
+import { useState, useEffect } from "react"
 
 const features = [
   {
@@ -167,10 +168,33 @@ const stats = [
 
 export function WhyChooseUsSection() {
   const [selectedFeature, setSelectedFeature] = useState<(typeof features)[0] | null>(null)
+  const [currentSlide, setCurrentSlide] = useState(0)
 
   const openFeatureDialog = (feature: (typeof features)[0]) => {
     setSelectedFeature(feature)
   }
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % features.length)
+  }
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + features.length) % features.length)
+  }
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "ArrowLeft") {
+        prevSlide()
+      } else if (event.key === "ArrowRight") {
+        nextSlide()
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [])
 
   return (
     <section
@@ -191,7 +215,6 @@ export function WhyChooseUsSection() {
             </svg>
             WHY CHOOSE US
           </Badge>
-
           <div className="max-w-4xl mx-auto">
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6 leading-tight">
               Excellence in{" "}
@@ -224,11 +247,10 @@ export function WhyChooseUsSection() {
           </Card>
         </div>
 
-        {/* Features Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8 mb-16">
+        {/* Features Grid - Desktop */}
+        <div className="hidden md:grid md:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8 mb-16">
           {features.map((feature) => {
             const IconComponent = feature.icon
-
             return (
               <Card
                 key={feature.id}
@@ -251,7 +273,6 @@ export function WhyChooseUsSection() {
                   </CardTitle>
                   <p className="text-gray-600 text-sm leading-relaxed mb-4">{feature.description}</p>
                 </CardHeader>
-
                 <CardContent className="pt-0">
                   <Dialog>
                     <DialogTrigger asChild>
@@ -292,7 +313,6 @@ export function WhyChooseUsSection() {
                           {feature.fullDescription}
                         </DialogDescription>
                       </DialogHeader>
-
                       <div className="space-y-6">
                         {/* Key Features */}
                         <div>
@@ -421,7 +441,259 @@ export function WhyChooseUsSection() {
           })}
         </div>
 
-        {/* ...existing code... */}
+        {/* Mobile Carousel */}
+        <div className="md:hidden mb-16">
+          {/* Carousel Container */}
+          <div className="overflow-hidden rounded-lg mb-6">
+            <div
+              className="flex transition-transform duration-300 ease-in-out"
+              style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+            >
+              {features.map((feature) => {
+                const IconComponent = feature.icon
+                return (
+                  <div key={feature.id} className="w-full flex-shrink-0 px-4">
+                    <Card className="group bg-white/90 backdrop-blur-sm border border-gray-200 hover:border-[#0077B6]/30 hover:shadow-xl transition-all duration-300">
+                      <CardHeader className="pb-4">
+                        <div className="flex items-start justify-between mb-4">
+                          <div
+                            className={`w-14 h-14 ${feature.bgColor} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}
+                          >
+                            <IconComponent className={`w-7 h-7 ${feature.iconColor}`} />
+                          </div>
+                          <div className="text-right">
+                            <div className="text-lg font-bold text-[#0077B6]">{feature.stat}</div>
+                            <div className="text-xs text-gray-500 font-medium">{feature.statLabel}</div>
+                          </div>
+                        </div>
+                        <CardTitle className="text-xl font-bold text-gray-900 group-hover:text-[#0077B6] transition-colors duration-200 mb-2">
+                          {feature.title}
+                        </CardTitle>
+                        <p className="text-gray-600 text-sm leading-relaxed mb-4">{feature.description}</p>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full border-[#0077B6] text-[#0077B6] bg-transparent hover:bg-blue-50 transition-colors duration-200"
+                              onClick={() => openFeatureDialog(feature)}
+                            >
+                              Learn More
+                              <svg
+                                className="w-4 h-4 ml-2"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                viewBox="0 0 24 24"
+                              >
+                                <path d="M7 17L17 7M17 7H7M17 7V17" />
+                              </svg>
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+                            <DialogHeader className="text-left pb-6">
+                              <div className="flex items-center gap-4 mb-4">
+                                <div
+                                  className={`w-16 h-16 ${feature.bgColor} rounded-xl flex items-center justify-center`}
+                                >
+                                  <IconComponent className={`w-8 h-8 ${feature.iconColor}`} />
+                                </div>
+                                <div>
+                                  <DialogTitle className="text-2xl font-bold text-gray-900 mb-1">
+                                    {feature.title}
+                                  </DialogTitle>
+                                  <div className="flex items-center gap-2">
+                                    <Badge variant="secondary" className="bg-blue-50 text-[#0077B6] border-blue-200">
+                                      {feature.stat} {feature.statLabel}
+                                    </Badge>
+                                  </div>
+                                </div>
+                              </div>
+                              <DialogDescription className="text-base text-gray-600 leading-relaxed">
+                                {feature.fullDescription}
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-6">
+                              {/* Key Features */}
+                              <div>
+                                <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                                  <svg
+                                    className="w-5 h-5 text-[#0077B6]"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                  Key Features
+                                </h4>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                  {feature.details.map((detail, index) => (
+                                    <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                                      <div className="w-2 h-2 bg-[#0077B6] rounded-full flex-shrink-0" />
+                                      <span className="text-sm text-gray-700 font-medium">{detail}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+
+                              <Separator />
+
+                              {/* Benefits */}
+                              <div>
+                                <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                                  <svg
+                                    className="w-5 h-5 text-[#0077B6]"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                  </svg>
+                                  Benefits for You
+                                </h4>
+                                <div className="space-y-3">
+                                  {feature.benefits.map((benefit, index) => (
+                                    <div key={index} className="flex items-start gap-3">
+                                      <div className="w-5 h-5 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                        <svg
+                                          className="w-3 h-3 text-green-600"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          strokeWidth="2"
+                                          viewBox="0 0 24 24"
+                                        >
+                                          <path d="M5 13l4 4L19 7" />
+                                        </svg>
+                                      </div>
+                                      <span className="text-sm text-gray-700 leading-relaxed">{benefit}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+
+                              <Separator />
+
+                              {/* Certifications */}
+                              <div>
+                                <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                                  <svg
+                                    className="w-5 h-5 text-[#0077B6]"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                  Certifications & Standards
+                                </h4>
+                                <div className="flex flex-wrap gap-2">
+                                  {feature.certifications.map((cert, index) => (
+                                    <Badge
+                                      key={index}
+                                      variant="outline"
+                                      className="border-[#0077B6] text-[#0077B6] bg-blue-50"
+                                    >
+                                      {cert}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+
+                              {/* CTA */}
+                              <div className="pt-4 border-t border-gray-100">
+                                <div className="flex flex-col sm:flex-row gap-3">
+                                  <Button className="flex-1 bg-[#0077B6] hover:bg-[#005f8e] text-white">
+                                    <svg
+                                      className="w-4 h-4 mr-2"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      strokeWidth="2"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 0V6a2 2 0 012-2h4a2 2 0 012 2v1m-6 0h8m-8 0H6a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V9a2 2 0 00-2-2h-2" />
+                                    </svg>
+                                    Book Appointment
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    className="flex-1 border-[#0077B6] text-[#0077B6] bg-transparent"
+                                  >
+                                    <svg
+                                      className="w-4 h-4 mr-2"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      strokeWidth="2"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                    </svg>
+                                    Contact Us
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Navigation Controls - Below Cards */}
+          <div className="flex flex-col items-center space-y-4">
+            {/* Arrow Buttons */}
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                size="icon"
+                className="w-12 h-12 rounded-xl bg-white border-gray-200 hover:bg-gray-50 hover:border-[#0077B6]/30 transition-colors duration-200 shadow-sm"
+                onClick={prevSlide}
+                disabled={currentSlide === 0}
+              >
+                <ChevronLeft className="h-5 w-5 text-gray-600" />
+              </Button>
+
+              <Button
+                variant="outline"
+                size="icon"
+                className="w-12 h-12 rounded-xl bg-white border-gray-200 hover:bg-gray-50 hover:border-[#0077B6]/30 transition-colors duration-200 shadow-sm"
+                onClick={nextSlide}
+                disabled={currentSlide === features.length - 1}
+              >
+                <ChevronRight className="h-5 w-5 text-gray-600" />
+              </Button>
+            </div>
+
+            {/* Slide Indicators */}
+            <div className="flex justify-center space-x-2">
+              {features.map((_, index) => (
+                <button
+                  key={index}
+                  className={`w-2 h-2 rounded-full transition-colors duration-200 ${
+                    index === currentSlide ? "bg-[#0077B6]" : "bg-gray-300"
+                  }`}
+                  onClick={() => setCurrentSlide(index)}
+                />
+              ))}
+            </div>
+
+            {/* Slide Counter */}
+            <div className="text-center">
+              <span className="text-sm text-gray-500">
+                {currentSlide + 1} of {features.length}
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   )

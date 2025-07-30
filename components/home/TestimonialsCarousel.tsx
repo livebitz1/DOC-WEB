@@ -163,14 +163,29 @@ export function TestimonialsCarousel() {
       {/* Testimonials Grid */}
       <div className="relative overflow-hidden">
         <div
-          className="flex transition-transform duration-300 ease-in-out"
-          style={{
-            transform: `translateX(-${currentIndex * (100 / itemsPerView)}%)`,
-          }}
+          className={itemsPerView === 1 ? "flex transition-transform duration-300 ease-in-out w-screen overflow-x-hidden" : "flex transition-transform duration-300 ease-in-out"}
+          style={
+            itemsPerView === 1
+              ? {
+                  width: `${testimonials.length * 100}vw`,
+                  transform: `translateX(-${currentIndex * 100}vw)`
+                }
+              : {
+                  transform: `translateX(-${currentIndex * (100 / itemsPerView)}%)`,
+                }
+          }
         >
           {testimonials.map((testimonial) => (
-            <div key={testimonial.id} className="flex-shrink-0 px-3" style={{ width: `${100 / itemsPerView}%` }}>
-              <Card className="h-full border border-gray-200 hover:border-[#0077B6]/30 hover:shadow-lg transition-all duration-200 bg-white">
+            <div
+              key={testimonial.id}
+              className={itemsPerView === 1 ? "flex-shrink-0 w-screen px-0 box-border overflow-x-hidden" : "flex-shrink-0 px-3"}
+              style={
+                itemsPerView === 1
+                  ? { width: '100vw', minWidth: '100vw', maxWidth: '100vw' }
+                  : { width: `${100 / itemsPerView}%` }
+              }
+            >
+              <Card className="h-full border border-gray-200 hover:border-[#0077B6]/30 hover:shadow-lg transition-all duration-200 bg-white box-border overflow-x-hidden">
                 <CardContent className="p-6 h-full flex flex-col">
                   {/* Rating Stars */}
                   <div className="flex items-center gap-1 mb-4">{renderStars(testimonial.rating)}</div>

@@ -10,6 +10,7 @@ import {
   UserButton,
 } from "@clerk/nextjs";
 import ClientLayout from './client-layout';
+import { LanguageProvider } from "@/lib/i18n";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,13 +34,15 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="en">
-        <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-          {/* Removed UserButton from layout header to prevent duplicate avatar in top left */}
-          {/* Automatically store Clerk user profile in Neon after authentication */}
-          <ClientLayout>{children}</ClientLayout>
-        </body>
-      </html>
+      <LanguageProvider>
+        <html lang="en">
+          <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+            {/* Removed UserButton from layout header to prevent duplicate avatar in top left */}
+            {/* Automatically store Clerk user profile in Neon after authentication */}
+            <ClientLayout>{children}</ClientLayout>
+          </body>
+        </html>
+      </LanguageProvider>
     </ClerkProvider>
   );
 }

@@ -1,12 +1,20 @@
+"use client"
 
-"use client";
-import { FaTooth, FaRegStar, FaTeeth, FaSmile, FaUserMd, FaRegCalendarCheck, FaRegHeart, FaSyringe, FaLayerGroup, FaAlignLeft, FaRegGrinStars, FaRegClock, FaExclamationCircle } from "react-icons/fa";
-
+import {
+  FaTooth,
+  FaRegStar,
+  FaSyringe,
+  FaLayerGroup,
+  FaAlignLeft,
+  FaRegGrinStars,
+  FaExclamationCircle,
+} from "react-icons/fa"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 
 const services = [
@@ -73,16 +81,39 @@ const services = [
 ]
 
 export function ServicesSection() {
-  const [selectedService, setSelectedService] = useState<number | null>(null);
-  const router = useRouter();
+  const [selectedService, setSelectedService] = useState<number | null>(null)
+  const [currentSlide, setCurrentSlide] = useState(0)
+  const router = useRouter()
 
   const handleLearnMore = (serviceId: number) => {
-    setSelectedService(selectedService === serviceId ? null : serviceId);
-  };
+    setSelectedService(selectedService === serviceId ? null : serviceId)
+  }
 
   const handleBookAppointment = () => {
-    router.push('/dentists');
-  };
+    router.push("/dentists")
+  }
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % services.length)
+  }
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + services.length) % services.length)
+  }
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "ArrowLeft") {
+        prevSlide()
+      } else if (event.key === "ArrowRight") {
+        nextSlide()
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [])
 
   return (
     <section id="services" className="py-16 lg:py-24 bg-gradient-to-br from-gray-50 via-white to-blue-50/20">
@@ -95,7 +126,6 @@ export function ServicesSection() {
             </svg>
             OUR SERVICES
           </Badge>
-
           <div className="max-w-3xl mx-auto">
             <div className="flex items-center gap-4 mb-2">
               <span className="inline-flex items-center justify-center rounded-full bg-blue-50 p-3 shadow text-blue-600">
@@ -105,16 +135,14 @@ export function ServicesSection() {
                 Comprehensive Dental Care
               </h2>
             </div>
-            {/* Removed badges for Family Friendly, Expert Dentists, Advanced Procedures, Easy Scheduling, Compassionate Care as requested */}
             <p className="text-lg lg:text-xl text-gray-600 mb-8 leading-relaxed">
               From routine cleanings to advanced procedures, we provide complete dental solutions for your entire family
             </p>
-            {/* Removed Book Appointment and Call Now buttons from Comprehensive Dental Care section as requested */}
           </div>
         </div>
 
-        {/* Services Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8">
+        {/* Services Grid - Desktop */}
+        <div className="hidden md:grid md:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8">
           {services.map((service) => (
             <Card
               key={service.id}
@@ -127,7 +155,6 @@ export function ServicesSection() {
                   {service.icon}
                 </div>
               </div>
-
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between mb-2">
                   <CardTitle className="text-xl font-bold text-gray-900 group-hover:text-[#0077B6] transition-colors duration-200">
@@ -138,27 +165,7 @@ export function ServicesSection() {
                   </Badge>
                 </div>
                 <p className="text-gray-600 text-sm leading-relaxed mb-4">{service.description}</p>
-                <div className="flex items-center justify-between">
-                  <span className="text-lg font-semibold text-[#0077B6]">{service.price}</span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleLearnMore(service.id)}
-                    className="text-[#0077B6] hover:bg-blue-50 p-2"
-                  >
-                    <svg
-                      className={`w-4 h-4 transition-transform duration-200 ${selectedService === service.id ? "rotate-180" : ""}`}
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      viewBox="0 0 24 24"
-                    >
-                      <path d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </Button>
-                </div>
               </CardHeader>
-
               <CardContent className="pt-0">
                 {/* Expandable Features Section */}
                 {selectedService === service.id && (
@@ -177,17 +184,8 @@ export function ServicesSection() {
                     <Separator className="my-3" />
                   </div>
                 )}
-
                 {/* Action Buttons */}
                 <div className="flex gap-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleLearnMore(service.id)}
-                    className="flex-1 border-[#0077B6] text-[#0077B6] bg-transparent hover:bg-blue-50 transition-colors duration-200"
-                  >
-                    {selectedService === service.id ? "Show Less" : "Learn More"}
-                  </Button>
                   <Button
                     size="sm"
                     onClick={handleBookAppointment}
@@ -202,6 +200,128 @@ export function ServicesSection() {
               </CardContent>
             </Card>
           ))}
+        </div>
+
+        {/* Mobile Carousel */}
+        <div className="md:hidden">
+          {/* Carousel Container */}
+          <div className="overflow-hidden rounded-lg mb-6">
+            <div
+              className="flex transition-transform duration-300 ease-in-out"
+              style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+            >
+              {services.map((service) => (
+                <div key={service.id} className="w-full flex-shrink-0 px-4">
+                  <Card className="group border border-gray-200 hover:border-[#0077B6]/30 hover:shadow-lg transition-all duration-300 bg-white/80 backdrop-blur-sm">
+                    {/* Service Icon Header */}
+                    <div
+                      className={`h-24 ${service.bgColor} flex items-center justify-center relative overflow-hidden`}
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-br from-transparent to-black/5" />
+                      <div className="w-14 h-14 bg-[#0077B6] rounded-xl flex items-center justify-center shadow-lg relative z-10 group-hover:scale-110 transition-transform duration-300">
+                        {service.icon}
+                      </div>
+                    </div>
+                    <CardHeader className="pb-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <CardTitle className="text-xl font-bold text-gray-900 group-hover:text-[#0077B6] transition-colors duration-200">
+                          {service.title}
+                        </CardTitle>
+                        <Badge variant="secondary" className="bg-blue-50 text-[#0077B6] border-blue-200 text-xs">
+                          {service.duration}
+                        </Badge>
+                      </div>
+                      <p className="text-gray-600 text-sm leading-relaxed mb-4">{service.description}</p>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      {/* Expandable Features Section */}
+                      {selectedService === service.id && (
+                        <div className="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-100 animate-in slide-in-from-top-2 duration-200">
+                          <h4 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wide">
+                            What's Included
+                          </h4>
+                          <div className="grid grid-cols-1 gap-2">
+                            {service.features.map((feature, index) => (
+                              <div key={index} className="flex items-center gap-2">
+                                <div className="w-1.5 h-1.5 bg-[#0077B6] rounded-full flex-shrink-0" />
+                                <span className="text-sm text-gray-700">{feature}</span>
+                              </div>
+                            ))}
+                          </div>
+                          <Separator className="my-3" />
+                        </div>
+                      )}
+                      {/* Action Buttons */}
+                      <div className="flex gap-3">
+                        <Button
+                          size="sm"
+                          onClick={handleBookAppointment}
+                          className="flex-1 bg-[#0077B6] hover:bg-[#005f8e] text-white transition-colors duration-200"
+                        >
+                          <svg
+                            className="w-4 h-4 mr-1"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            viewBox="0 0 24 24"
+                          >
+                            <path d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 0V6a2 2 0 012-2h4a2 2 0 012 2v1m-6 0h8m-8 0H6a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V9a2 2 0 00-2-2h-2" />
+                          </svg>
+                          Book Now
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Navigation Controls - Below Cards */}
+          <div className="flex flex-col items-center space-y-4">
+            {/* Arrow Buttons */}
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                size="icon"
+                className="w-12 h-12 rounded-xl bg-white border-gray-200 hover:bg-gray-50 hover:border-[#0077B6]/30 transition-colors duration-200 shadow-sm"
+                onClick={prevSlide}
+                disabled={currentSlide === 0}
+              >
+                <ChevronLeft className="h-5 w-5 text-gray-600" />
+              </Button>
+
+              <Button
+                variant="outline"
+                size="icon"
+                className="w-12 h-12 rounded-xl bg-white border-gray-200 hover:bg-gray-50 hover:border-[#0077B6]/30 transition-colors duration-200 shadow-sm"
+                onClick={nextSlide}
+                disabled={currentSlide === services.length - 1}
+              >
+                <ChevronRight className="h-5 w-5 text-gray-600" />
+              </Button>
+            </div>
+
+            {/* Slide Indicators */}
+            <div className="flex justify-center space-x-2">
+              {services.map((_, index) => (
+                <button
+                  key={index}
+                  className={`w-2 h-2 rounded-full transition-colors duration-200 ${
+                    index === currentSlide ? "bg-[#0077B6]" : "bg-gray-300"
+                  }`}
+                  onClick={() => setCurrentSlide(index)}
+                />
+              ))}
+            </div>
+
+            {/* Slide Counter */}
+            <div className="text-center">
+              <span className="text-sm text-gray-500">
+                {currentSlide + 1} of {services.length}
+              </span>
+            </div>
+          </div>
         </div>
 
         {/* Bottom CTA Section */}
@@ -241,7 +361,6 @@ export function ServicesSection() {
           </Card>
         </div>
       </div>
-
     </section>
-  );
+  )
 }
