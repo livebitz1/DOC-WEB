@@ -12,7 +12,6 @@ const navLinks = [
 	{ href: "/book", label: { en: "Book", km: "កក់" }, icon: <FaCalendarAlt /> },
 	{ href: "/chat/list", label: { en: "Chat", km: "ជជែក" }, icon: <FaComments /> },
 	{ href: "#services", label: { en: "Services", km: "សេវាកម្ម" }, icon: <FaTooth /> },
-	{ href: "#team", label: { en: "Team", km: "ក្រុមការងារ" }, icon: <FaUsers /> },
 	{ href: "#contact", label: { en: "Contact", km: "ទំនាក់ទំនង" }, icon: <FaEnvelope /> },
 ];
 
